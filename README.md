@@ -6,7 +6,7 @@
 
 [![Downloads](https://img.shields.io/npm/dt/homebridge-connect-my-pool-home-automation?color=38A8E0&style=for-the-badge)](https://www.npmjs.com/package/homebridge-connect-my-pool-home-automation)
 [![Version](https://img.shields.io/npm/v/homebridge-connect-my-pool-home-automation?label=homebridge-connect-my-pool-home-automation&color=38A8E0&style=for-the-badge)](https://www.npmjs.com/package/homebridge-connect-my-pool-home-automation)
-## HomeKit support for Astral Connect My Pool using [Homebridge] Home Automation API(https://homebridge.io).
+## HomeKit support for Astral Connect My Pool using Home Automation API with [Homebridge] (https://homebridge.io).
 </SPAN>
 
 `homebridge-connect-my-pool-home-automation` is a plugin for Homebridge intended to give you an integrated experience with your [Astral Connect My Pool](https://connectmypool.com.au) devices.
