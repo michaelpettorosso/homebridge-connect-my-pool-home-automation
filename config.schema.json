@@ -1,0 +1,23 @@
+{
+  "pluginAlias": "ConnectMyPoolHomeAutomation",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "Connect My Pool Home Automation"
+      },
+      "apikey": {
+        "type": "string",
+        "title": "APIKEY",
+        "required": true,
+        "placeholder": "APIKey used to access Home Automation",
+        "description": "Your Connect My Pool APIKey."
+      }
+    }
+  }
+}
