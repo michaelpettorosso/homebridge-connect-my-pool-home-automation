@@ -2,7 +2,7 @@
 
 [![homebridge-connect-my-pool-home-automation: Native HomeKit support for Astral Connect My Pool](https://github.com/michaelpettorosso/homebridge-connect-my-pool-home-automation)
 
-# Homebridge Astral Connect My Pool
+# Homebridge Astral Connect My Pool Home Automation
 
 [![Downloads](https://img.shields.io/npm/dt/homebridge-connect-my-pool-home-automation?color=38A8E0&style=for-the-badge)](https://www.npmjs.com/package/homebridge-connect-my-pool-home-automation)
 [![Version](https://img.shields.io/npm/v/homebridge-connect-my-pool-home-automation?label=homebridge-connect-my-pool-home-automation&color=38A8E0&style=for-the-badge)](https://www.npmjs.com/package/homebridge-connect-my-pool-home-automation)
@@ -33,11 +33,9 @@ Add the platform in `config.json` in your home directory inside `.homebridge` an
 ```js
 "platforms": [
   {
-    "platform": "Connect My Pool Home Automation",
-    "username": "username",
-    "password": "password",
-    "refreshTime": 10,
-    "debug": true
+    "name": "Connect My Pool Home Automation",
+    "apikey": "apikey",
+    "platform": "ConnectMyPoolHomeAutomation"
   }
 ]
 ```
