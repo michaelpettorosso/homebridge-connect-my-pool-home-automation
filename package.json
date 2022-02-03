@@ -9,6 +9,14 @@
     "type": "git",
     "url": "git://github.com/michaelpettorosso/homebridge-connect-my-pool-home-automation.git"
   },
+  "author": {
+    "name": "MICHAEL PETTOROSSO https://github.com/michaelpettorosso"
+  },
+  "contributors": [
+    {
+      "name": "Michael Pettorosso"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/michaelpettorosso/homebridge-connect-my-pool-home-automation/issues"
   },
@@ -28,7 +36,8 @@
     "equipment",
     "astral",
     "homebridge",
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "homebridge-connect-my-pool"
   ],
   "dependencies": {
     "axios": "^0.24.0",
@@ -44,5 +53,10 @@
     "rimraf": "^3.0.2",
     "ts-node": "^10.3.0",
     "typescript": "^4.4.4"
-  }
+  },
+  "files": [
+    "LICENSE.md",
+    "README.md",
+    "dist"
+  ]
 }
