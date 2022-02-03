@@ -44,4 +44,5 @@ Add the platform in `config.json` in your home directory inside `.homebridge` an
 
 ### Notes
 
+
 Only tested with my setup, I have EVO pool pump, EVO gas heater, spa jets and spa blower and lights.
