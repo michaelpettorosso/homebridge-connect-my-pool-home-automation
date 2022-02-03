@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Logging, PlatformAccessory, Service } from 'homebridge';
-import { Characteristic } from 'hap-nodejs';
+import { Logging, PlatformAccessory, Service, Characteristic } from 'homebridge';
 import { IDevice } from '../devices/iDevice';
 
 import { ConnectMyPoolHomeAutomationHomebridgePlatform } from '../platform';
@@ -14,6 +13,7 @@ import { PoolStatus } from '../status';
  */
 export class Accessory {
   readonly log : Logging;
+  readonly Characteristic: typeof Characteristic;
   readonly service: typeof Service;
   services: Service[] = [];
   constructor(
@@ -27,12 +27,13 @@ export class Accessory {
     this.accessory.context.device = device;
     this.accessory.context.status = status;
     this.setConfigStatus(status);
+    this.Characteristic = this.platform.api.hap.Characteristic;
     // set accessory information
     this.accessory.getService(this.service.AccessoryInformation)!
-      .setCharacteristic(Characteristic.Name, device.deviceName)
-      .setCharacteristic(Characteristic.Manufacturer, MANUFACTURER)
-      .setCharacteristic(Characteristic.Model, device.deviceType)
-      .setCharacteristic(Characteristic.SerialNumber, this.SerialNumber);
+      .setCharacteristic(this.Characteristic.Name, device.deviceName)
+      .setCharacteristic(this.Characteristic.Manufacturer, MANUFACTURER)
+      .setCharacteristic(this.Characteristic.Model, device.deviceType)
+      .setCharacteristic(this.Characteristic.SerialNumber, this.SerialNumber);
     this.setUpServices();
 
   }

@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Connect My Pool via Home Automation",
   "name": "homebridge-connect-my-pool-home-automation",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "HomeKit integration for Astral Viron Gateway via Home Automation",
   "homepage": "https://github.com/michaelpettorosso/homebridge-connect-my-pool-home-automation#readme",
   "license": "Apache-2.0",
@@ -53,10 +53,5 @@
     "rimraf": "^3.0.2",
     "ts-node": "^10.3.0",
     "typescript": "^4.4.4"
-  },
-  "files": [
-    "LICENSE.md",
-    "README.md",
-    "dist"
-  ]
+  }
 }

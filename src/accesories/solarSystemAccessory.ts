@@ -1,5 +1,4 @@
-import { PlatformAccessory, Service } from 'homebridge';
-import { Characteristic } from 'hap-nodejs';
+import { PlatformAccessory, Service, Characteristic} from 'homebridge';
 import { getSunrise, getSunset } from 'sunrise-sunset-js';
 import { PoolAction } from '../action';
 import { SolarSystemConfig } from '../config';
@@ -16,8 +15,8 @@ import { Accessory } from './accessory';
  * Each accessory may expose multiple services of different service types.
  */
 export class SolarSystemAccessory extends Accessory {
-  private stateCurrentHeatingCooling = Characteristic.CurrentHeatingCoolingState.OFF;
-  private stateTargetHeatingCooling = Characteristic.TargetHeatingCoolingState.OFF;
+  private stateCurrentHeatingCooling : number;
+  private stateTargetHeatingCooling : number;
   private currentTemperature = MIN_TEMP;
   private currentTargetTemperature = MIN_TARGET_TEMP;
   private solarSystemConfigStatus : ISolarSystemConfigStatus;
@@ -32,6 +31,8 @@ export class SolarSystemAccessory extends Accessory {
     status: PoolStatus,
   ) {
     super(platform, accessory, device, status);
+    this.stateCurrentHeatingCooling = this.Characteristic.CurrentHeatingCoolingState.OFF;
+    this.stateTargetHeatingCooling = this.Characteristic.TargetHeatingCoolingState.OFF;
     this.solarSystemConfigStatus = this.getSolarSystemConfigStatus(status);
     //looks like bug in library???
     this.sunset = getSunrise(this.platform.config.latitude, this.platform.config.longitude).valueOf();
@@ -52,20 +53,20 @@ export class SolarSystemAccessory extends Accessory {
     const zoneService = this.accessory.getServiceById(this.service.Thermostat, this.device.deviceType)
                         || this.accessory.addService(this.service.Thermostat, this.device.deviceName, this.device.deviceType);
 
-    zoneService.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+    zoneService.getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .setProps({
-        maxValue: Characteristic.CurrentHeatingCoolingState.HEAT,
+        maxValue: this.Characteristic.CurrentHeatingCoolingState.HEAT,
       })
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
 
-    zoneService.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+    zoneService.getCharacteristic(this.Characteristic.TargetHeatingCoolingState)
       .setProps({
-        maxValue: Characteristic.TargetHeatingCoolingState.HEAT,
+        maxValue: this.Characteristic.TargetHeatingCoolingState.HEAT,
       })
       .onGet(this.getTargetHeatingCoolingState.bind(this))
       .onSet(this.setTargetHeatingCoolingState.bind(this));
 
-    zoneService.getCharacteristic(Characteristic.CurrentTemperature)
+    zoneService.getCharacteristic(this.Characteristic.CurrentTemperature)
       .setProps({
         maxValue: MAX_TEMP,
         minValue: MIN_TEMP,
@@ -73,7 +74,7 @@ export class SolarSystemAccessory extends Accessory {
       })
       .onGet(this.getCurrentTemperature.bind(this));
 
-    zoneService.getCharacteristic(Characteristic.TargetTemperature)
+    zoneService.getCharacteristic(this.Characteristic.TargetTemperature)
       .setProps({
         maxValue: MAX_TARGET_TEMP,
         minValue: MIN_TARGET_TEMP,
@@ -82,8 +83,8 @@ export class SolarSystemAccessory extends Accessory {
       .onGet(this.getTargetTemperature.bind(this))
       .onSet(this.setTargetTemperature.bind(this));
 
-    zoneService.getCharacteristic(Characteristic.TemperatureDisplayUnits)
-      .setValue(Characteristic.TemperatureDisplayUnits.CELSIUS);
+    zoneService.getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
+      .setValue(this.Characteristic.TemperatureDisplayUnits.CELSIUS);
     this.services.push(zoneService);
     return zoneService;
   }
@@ -92,7 +93,7 @@ export class SolarSystemAccessory extends Accessory {
     this.log.debug('Creating %s service for controller', 'Pool Temperature');
     const zoneService = this.accessory.getServiceById(this.service.TemperatureSensor, this.device.deviceType)
                         || this.accessory.addService(this.service.TemperatureSensor, 'Pool Temperature', this.device.deviceType);
-    zoneService.getCharacteristic(Characteristic.CurrentTemperature)
+    zoneService.getCharacteristic(this.Characteristic.CurrentTemperature)
       .setProps({
         maxValue: MAX_TEMP,
         minValue: MIN_TEMP,
@@ -157,20 +158,20 @@ export class SolarSystemAccessory extends Accessory {
     await super.updateStatus(status);
     const currentHeatingCoolingState = this.getCurrentHeatingCoolingState();
 
-    this.services[0].getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+    this.services[0].getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .updateValue(currentHeatingCoolingState);
 
-    this.services[0].getCharacteristic(Characteristic.TargetHeatingCoolingState)
+    this.services[0].getCharacteristic(this.Characteristic.TargetHeatingCoolingState)
       .updateValue(currentHeatingCoolingState);
 
     //const solarSystemConfigStatus = this.getSolarSystemConfigStatus();
-    this.services[0].getCharacteristic(Characteristic.CurrentTemperature)
+    this.services[0].getCharacteristic(this.Characteristic.CurrentTemperature)
       .updateValue(this.getCurrentTemperature());
 
-    this.services[0].getCharacteristic(Characteristic.TargetTemperature)
+    this.services[0].getCharacteristic(this.Characteristic.TargetTemperature)
       .updateValue(this.getTargetTemperature());
 
-    this.services[1].getCharacteristic(Characteristic.CurrentTemperature)
+    this.services[1].getCharacteristic(this.Characteristic.CurrentTemperature)
       .updateValue(this.getCurrentTemperature());
 
   }
@@ -206,9 +207,9 @@ export class SolarSystemAccessory extends Accessory {
     const solarSystemConfigStatus = this.solarSystemConfigStatus;
 
     if (solarSystemConfigStatus && solarSystemConfigStatus.hasStatus) {
-      const value = solarSystemConfigStatus.mode === SolarSystemMode.OFF ? Characteristic.CurrentHeatingCoolingState.OFF
+      const value = solarSystemConfigStatus.mode === SolarSystemMode.OFF ? this.Characteristic.CurrentHeatingCoolingState.OFF
         : (solarSystemConfigStatus.temperature < solarSystemConfigStatus.set_temperature) && this.isDayTime()
-          ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.OFF;
+          ? this.Characteristic.CurrentHeatingCoolingState.HEAT : this.Characteristic.CurrentHeatingCoolingState.OFF;
       this.stateCurrentHeatingCooling = value;
     }
 
@@ -221,9 +222,9 @@ export class SolarSystemAccessory extends Accessory {
     const solarSystemConfigStatus = this.solarSystemConfigStatus;
 
     if (solarSystemConfigStatus && solarSystemConfigStatus.hasStatus) {
-      const value = solarSystemConfigStatus.mode === SolarSystemMode.OFF ? Characteristic.TargetHeatingCoolingState.OFF
+      const value = solarSystemConfigStatus.mode === SolarSystemMode.OFF ? this.Characteristic.TargetHeatingCoolingState.OFF
         : (solarSystemConfigStatus.temperature < solarSystemConfigStatus.set_temperature) && this.isDayTime()
-          ? Characteristic.TargetHeatingCoolingState.HEAT : Characteristic.TargetHeatingCoolingState.OFF;
+          ? this.Characteristic.TargetHeatingCoolingState.HEAT : this.Characteristic.TargetHeatingCoolingState.OFF;
 
       this.stateTargetHeatingCooling = value;
     }

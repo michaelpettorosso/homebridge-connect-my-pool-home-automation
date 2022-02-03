@@ -1,5 +1,4 @@
 import { Service, PlatformAccessory } from 'homebridge';
-import { Characteristic } from 'hap-nodejs';
 import { PoolAction } from '../action';
 import { ChannelDevice } from '../devices/channelDevice';
 import { ConnectMyPoolHomeAutomationHomebridgePlatform } from '../platform';
@@ -49,11 +48,11 @@ export class ChannelAccessory extends Accessory {
     this.log.debug('Creating %s service for controller', this.device.deviceName);
     const zoneService = this.accessory.getServiceById(this.service.StatefulProgrammableSwitch, this.device.deviceType)
                         || this.accessory.addService(this.service.StatefulProgrammableSwitch, this.getNameState, this.device.deviceType);
-    zoneService.getCharacteristic(Characteristic.On)
+    zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
       .onSet(this.setOnState.bind(this));
 
-    zoneService.getCharacteristic(Characteristic.Name)
+    zoneService.getCharacteristic(this.Characteristic.Name)
       .onGet(this.getNameState.bind(this));
 
     this.services.push(zoneService);
@@ -96,9 +95,9 @@ export class ChannelAccessory extends Accessory {
   async updateStatus(status: PoolStatus) {
     await super.updateStatus(status);
 
-    this.services[0].getCharacteristic(Characteristic.On)
+    this.services[0].getCharacteristic(this.Characteristic.On)
       .updateValue(this.getOnState());
-    this.services[0].getCharacteristic(Characteristic.Name)
+    this.services[0].getCharacteristic(this.Characteristic.Name)
       .setValue(this.getNameState());
   }
 
