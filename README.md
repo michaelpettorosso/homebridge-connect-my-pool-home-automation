@@ -35,6 +35,8 @@ Add the platform in `config.json` in your home directory inside `.homebridge` an
   {
     "name": "Connect My Pool Home Automation",
     "apikey": "apikey",
+    "latitude": latitude,
+    "longitude": longitude,
     "platform": "ConnectMyPoolHomeAutomation"
   }
 ]
@@ -42,4 +44,4 @@ Add the platform in `config.json` in your home directory inside `.homebridge` an
 
 ### Notes
 
-Only readonly at the moment and have only tested with my setup, not very configurable at the moment, I have EVO pool pump, EVO gas heater, spa jets and spa blower and lights.
+At the moment and have only tested with my setup, I have EVO pool pump, EVO gas heater, spa jets and spa blower and lights.
