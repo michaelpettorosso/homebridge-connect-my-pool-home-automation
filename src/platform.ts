@@ -1,19 +1,17 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
-
-import { PLATFORM_NAME, PLUGIN_NAME, BASE_URL, API_INTERVAL } from './settings';
-
+import { API, DynamicPlatformPlugin, PlatformAccessory, PlatformConfig, Service, Characteristic, Logging } from 'homebridge';
+import { PLATFORM_NAME, PLUGIN_NAME, BASE_URL, API_INTERVAL, TemperatureScale } from './settings';
 import axios from 'axios';
 
 import { IDevice } from './devices/iDevice';
-import { SolarHeaterDevice } from './devices/solarHeaterDevice';
-import { SolarHeaterAccessory } from './accesories/solarHeaterAccessory';
+import { SolarSystemDevice } from './devices/solarSystemDevice';
+import { SolarSystemAccessory } from './accesories/solarSystemAccessory';
 import { ChannelDevice } from './devices/channelDevice';
 import { ChannelAccessory } from './accesories/channelAccessory';
 import { HeaterDevice } from './devices/heaterDevice';
 import { HeaterAccessory } from './accesories/heaterAccessory';
 import { FavouriteDevice } from './devices/favouriteDevice';
 import { FavouriteAccessory } from './accesories/favouriteAccessory';
-import { LightingDevice } from './devices/lightingDevice';
+import { LightingZoneDevice } from './devices/lightingZoneDevice';
 import { LightingAccessory } from './accesories/lightingAccessory';
 import { Accessory } from './accesories/accessory';
 import { PoolStatus } from './status';
@@ -30,13 +28,13 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
 
   // this is used to track restored cached accessories
   public readonly accessories: Accessory[] = [];
-  private poolStatus : PoolStatus | undefined;
   private pollIntervalId;
   constructor(
-    public readonly log: Logger,
+    public readonly log: Logging,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+
     this.log.debug('Finished initializing platform:', this.config.name);
     axios.defaults.baseURL = BASE_URL;
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -54,24 +52,27 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(homekitAccessory: PlatformAccessory) {
+  async configureAccessory(homekitAccessory: PlatformAccessory) {
     this.log.info(`Restoring cached accessory ${homekitAccessory.displayName}`);
 
     try {
       const device = homekitAccessory.context.device as IDevice;
+      const poolStatus = homekitAccessory.context.status as PoolStatus;
       let accessory : Accessory | undefined;
       if (device) {
         this.log.debug('Device', device);
         if (device.deviceType === HeaterDevice.type) {
-          accessory = new HeaterAccessory(this, homekitAccessory, device, this.poolStatus);
-        } else if (device.deviceType === SolarHeaterDevice.type) {
-          accessory = new SolarHeaterAccessory(this, homekitAccessory, device, this.poolStatus);
-        //} else if (device.deviceType === ChannelDevice.type) {
-        //   accessory = new ChannelAccessory(this, homekitAccessory, device, this.poolStatus);
-        } else if (device.deviceType === LightingDevice.type) {
-          accessory =new LightingAccessory(this, homekitAccessory, device, this.poolStatus);
+          const heaterDevice = device as HeaterDevice;
+          accessory = new HeaterAccessory(this, homekitAccessory, heaterDevice, poolStatus);
+        } else if (device.deviceType === SolarSystemDevice.type) {
+          accessory = new SolarSystemAccessory(this, homekitAccessory, device, poolStatus);
+        } else if (device.deviceType === ChannelDevice.type) {
+          const channelDevice = device as ChannelDevice;
+          accessory = new ChannelAccessory(this, homekitAccessory, channelDevice, poolStatus);
+        } else if (device.deviceType === LightingZoneDevice.type) {
+          accessory =new LightingAccessory(this, homekitAccessory, device, poolStatus);
         } //else if (device.deviceType === FavouriteDevice.type) {
-        //   accessory =new FavouriteAccessory(this, homekitAccessory, device, this.poolStatus);
+        //   accessory =new FavouriteAccessory(this, homekitAccessory, device, poolStatus);
         // }
         if (accessory) {
           this.accessories.push(accessory);
@@ -83,7 +84,6 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
         error,
       );
     }
-
   }
 
   /**
@@ -92,16 +92,14 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-    const poolConfig = await this.getPoolConfig();
-
     const devices:IDevice[] = [];
-
+    const poolConfig = await this.getPoolConfig();
     if (poolConfig) {
       if (poolConfig.has_heaters === true) {
         let i = 0;
         for (const heater of poolConfig.heaters) {
           i++;
-          const device: IDevice = new HeaterDevice(heater, i);
+          const device: IDevice = new HeaterDevice(heater, i, poolConfig.pool_spa_selection_enabled);
           devices.push(device);
         }
       }
@@ -109,19 +107,19 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
         let i = 0;
         for (const solarsystem of poolConfig.solar_systems) {
           i++;
-          const device:IDevice = new SolarHeaterDevice(solarsystem, i);
+          const device:IDevice = new SolarSystemDevice(solarsystem, i);
           devices.push(device);
         }
       }
       if (poolConfig.has_channels === true) {
         for (const channel of poolConfig.channels) {
-          const device:IDevice = new ChannelDevice(channel, channel.name);
+          const device:IDevice = new ChannelDevice(channel, channel.name, channel.function);
           devices.push(device);
         }
       }
       if (poolConfig.has_lighting_zones === true) {
         for (const lighting of poolConfig.lighting_zones) {
-          const device:IDevice = new LightingDevice(lighting, lighting.name);
+          const device:IDevice = new LightingZoneDevice(lighting, lighting.name);
           devices.push(device);
         }
       }
@@ -131,32 +129,31 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
           devices.push(device);
         }
       }
-      const status = await this.getPoolStatus();
+      const poolStatus = await this.getPoolStatus();
 
       for (const device of devices) {
-
         // see if an accessory with the same uuid has already been registered and restored from
         // the cached devices we stored in the `configureAccessory` method above
         this.log.debug('Accessories:', this.accessories.length);
 
         const existingAccessory = this.accessories.find(accessory => accessory.device.deviceType === device.deviceType
           && accessory.deviceName === device.deviceName);
-        if (!existingAccessory) {
+        if (!existingAccessory && poolStatus) {
           // create a new accessory
           const uuid = this.api.hap.uuid.generate(`${device.deviceType}:${device.deviceTypeNumber}`);
 
           const platformAccessory = new this.api.platformAccessory(device.deviceName, uuid, device.category);
           let accessory : Accessory | undefined;
           if (device.deviceType === HeaterDevice.type) {
-            accessory = new HeaterAccessory(this, platformAccessory, device, status);
-          } else if (device.deviceType === SolarHeaterDevice.type) {
-            accessory = new SolarHeaterAccessory(this, platformAccessory, device, status);
-          //} else if (device.deviceType === ChannelDevice.type) {
-          //   accessory = new ChannelAccessory(this, platformAccessory, device, status);
-          } else if (device.deviceType === LightingDevice.type) {
-            accessory =new LightingAccessory(this, platformAccessory, device, status);
+            accessory = new HeaterAccessory(this, platformAccessory, device as HeaterDevice, poolStatus);
+          } else if (device.deviceType === SolarSystemDevice.type) {
+            accessory = new SolarSystemAccessory(this, platformAccessory, device, poolStatus);
+          } else if (device.deviceType === ChannelDevice.type) {
+            accessory = new ChannelAccessory(this, platformAccessory, device as ChannelDevice, poolStatus);
+          } else if (device.deviceType === LightingZoneDevice.type) {
+            accessory =new LightingAccessory(this, platformAccessory, device, poolStatus);
           } //else if (device.deviceType === FavouriteDevice.type) {
-          //   accessory =new FavouriteAccessory(this, platformAccessory, device, status);
+          //   accessory =new FavouriteAccessory(this, platformAccessory, device, poolStatus);
           // }
           if (accessory) {
             // the accessory does not yet exist, so we need to create it
@@ -173,7 +170,6 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
         }
       }
     }
-
     this.poll(API_INTERVAL);
   }
 
@@ -184,27 +180,56 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
     }
 
     this.pollIntervalId = setInterval(async () => {
-      const status = await this.getPoolStatus();
-      if (status) {
-        this.poolStatus = status;
+      const poolStatus = await this.getPoolStatus();
+      if (poolStatus) {
+        this.log.debug('PoolStatus', poolStatus);
         for (const accessory of this.accessories) {
-          await accessory.updateStatus(this.poolStatus);
+          await accessory.updateStatus(poolStatus);
         }
       }
     }, interval);
+  }
+
+  public async setPoolAction(actionCode: number,
+    deviceNumber: number,
+    value: string,
+    outputResponse = false,
+    waitForExecution = true): Promise<boolean | undefined> {
+
+    const payload = {
+      'pool_api_code': this.config.apikey,
+      'temperature_scale': TemperatureScale.CELSIUS,
+      'action_code': actionCode,
+      'device_number': deviceNumber,
+      'value': value,
+      'wait_for_execution': waitForExecution,
+    };
+    this.log.debug('Set PoolAction', payload);
+    const req = axios.post('poolaction', payload);
+    const res = await req;
+    const status = res.data;
+    if (outputResponse) {
+      this.log.debug('Set PoolAction Response', status);
+    }
+    if (status.failure_code) {
+      this.log.error('Set PoolAction Failed', status);
+      return undefined;
+
+    }
+    return status.execution_status === 1;
   }
 
   private async getPoolStatus() : Promise<PoolStatus | undefined> {
     this.log.debug('getPoolStatus');
     const req = axios.post('poolstatus', {
       'pool_api_code': this.config.apikey,
-      'temperature_scale': 0,
+      'temperature_scale': TemperatureScale.CELSIUS,
     } );
     const res = await req;
     const status = res.data;
 
     if (status.failure_code) {
-      this.log.info('PoolStatus Failed', status);
+      this.log.error('PoolStatus Failed', status);
       return undefined;
 
     }
@@ -220,6 +245,3 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
     return res.data;
   }
 }
-
-
-

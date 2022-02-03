@@ -14,7 +14,7 @@ export class FavouriteAccessory extends Accessory {
     platform: ConnectMyPoolHomeAutomationHomebridgePlatform,
     accessory: PlatformAccessory,
     device: FavouriteDevice,
-    status: PoolStatus | undefined,
+    status: PoolStatus,
   ) {
     super(platform, accessory, device, status);
 
@@ -23,5 +23,4 @@ export class FavouriteAccessory extends Accessory {
   protected setUpServices() {
     super.setUpServices();
   }
-
 }

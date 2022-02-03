@@ -1,16 +1,16 @@
 import { Categories } from 'homebridge';
 import { SolarSystemConfig } from '../config';
-import { IDevice } from './iDevice';
+import { IDevice, ConfigTypes } from './iDevice';
 
-export class SolarHeaterDevice implements IDevice {
+export class SolarSystemDevice implements IDevice {
   readonly deviceName: string;
   readonly deviceType: string;
   readonly deviceTypeNumber: number;
   readonly category: Categories | undefined;
-  readonly data;
+  readonly data: ConfigTypes;
   static readonly type = 'SolarHeater';
   constructor(config: SolarSystemConfig, count: number) {
-    this.deviceType = SolarHeaterDevice.type;
+    this.deviceType = SolarSystemDevice.type;
     this.deviceName = 'Solar Heater';
     if (count > 1) {
       this.deviceName += ' ' + count.toString();
@@ -19,5 +19,4 @@ export class SolarHeaterDevice implements IDevice {
     this.data = config;
     this.category = Categories.THERMOSTAT;
   }
-
 }

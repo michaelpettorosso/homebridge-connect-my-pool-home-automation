@@ -10,10 +10,36 @@ export interface PoolConfig {
     heaters: HeaterConfig[];
     solar_systems: SolarSystemConfig[];
     channels: ChannelConfig[];
-    valves: [];
+    valves: ValveConfig[];
     lighting_zones: LightingZoneConfig[];
     favourites: FavouriteConfig[];
   }
+
+export enum ChannelConfigFunction {
+  FilterPump = 1,
+  CleaningPump = 2,
+  HeaterPump = 3,
+  BoosterPump = 4,
+  WaterfallPump = 5,
+  FountainPump = 6,
+  SpaPump = 7,
+  SolarPump = 8,
+  Blower = 9,
+  Swimjet = 10,
+  Jets = 11,
+  SpaJets = 12,
+  Overflow = 13,
+  Spillway = 14,
+  Audio = 15,
+  HotSeat = 16,
+  HeaterPower = 17,
+  CustomName = 18,
+}
+
+export enum ValveConfigFunction {
+  PoolSpa = 1,
+  Solar = 2
+}
 
 export interface HeaterConfig {
     heater_number: number;
@@ -25,6 +51,12 @@ export interface SolarSystemConfig {
 
 export interface ChannelConfig {
     channel_number: number;
+    function: number;
+    name: string;
+  }
+
+export interface ValveConfig {
+    valve_number: number;
     function: number;
     name: string;
   }

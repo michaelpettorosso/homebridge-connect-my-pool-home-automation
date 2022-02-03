@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
+import { Logging, PlatformAccessory, Service } from 'homebridge';
+import { Characteristic } from 'hap-nodejs';
 import { IDevice } from '../devices/iDevice';
 
 import { ConnectMyPoolHomeAutomationHomebridgePlatform } from '../platform';
-import { MANUFACTURER, PLUGIN_NAME } from '../settings';
+import { MANUFACTURER } from '../settings';
 import { PoolStatus } from '../status';
 
 /**
@@ -12,29 +13,26 @@ import { PoolStatus } from '../status';
  * Each accessory may expose multiple services of different service types.
  */
 export class Accessory {
-  readonly log : Logger;
-  readonly characteristic: typeof Characteristic;
+  readonly log : Logging;
   readonly service: typeof Service;
   services: Service[] = [];
   constructor(
     readonly platform: ConnectMyPoolHomeAutomationHomebridgePlatform,
     readonly accessory: PlatformAccessory,
     device: IDevice,
-    status: PoolStatus | undefined,
+    status: PoolStatus,
   ) {
-    this.characteristic = this.platform.Characteristic;
     this.service = this.platform.Service;
     this.log = this.platform.log;
     this.accessory.context.device = device;
     this.accessory.context.status = status;
-
+    this.setConfigStatus(status);
     // set accessory information
     this.accessory.getService(this.service.AccessoryInformation)!
-      .setCharacteristic(this.characteristic.Name, device.deviceName)
-      .setCharacteristic(this.characteristic.Manufacturer, MANUFACTURER)
-      .setCharacteristic(this.characteristic.Model, device.deviceType)
-      .setCharacteristic(this.characteristic.SerialNumber, this.SerialNumber);
-
+      .setCharacteristic(Characteristic.Name, device.deviceName)
+      .setCharacteristic(Characteristic.Manufacturer, MANUFACTURER)
+      .setCharacteristic(Characteristic.Model, device.deviceType)
+      .setCharacteristic(Characteristic.SerialNumber, this.SerialNumber);
     this.setUpServices();
 
   }
@@ -43,13 +41,9 @@ export class Accessory {
     return this.accessory.context.device;
   }
 
-  get status():PoolStatus | undefined {
+  get poolStatus():PoolStatus {
     return this.accessory.context.status;
   }
-
-  // get displayName() {
-  //   return this.accessory.displayName;
-  // }
 
   get deviceName() {
     return this.device.deviceName;
@@ -73,12 +67,18 @@ export class Accessory {
     this.platform.api.updatePlatformAccessories([this.accessory]);
   }
 
-  // eslint-disable-next-line no-unused-vars
-  async updateStatus(status: PoolStatus | undefined) {
-    if (status) {
-      this.accessory.context.status = status;
-    }
-  // to be implemented in children classes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setConfigStatus(status: PoolStatus) {
+    // to be implemented in children classes
+
   }
 
+  // eslint-disable-next-line no-unused-vars
+  async updateStatus(status: PoolStatus) {
+    if (status) {
+      this.accessory.context.status = status;
+      this.setConfigStatus(status);
+    }
+    // to be implemented in children classes
+  }
 }

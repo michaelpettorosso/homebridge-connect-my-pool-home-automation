@@ -17,6 +17,21 @@
         "required": true,
         "placeholder": "APIKey used to access Home Automation",
         "description": "Your Connect My Pool APIKey."
+      },
+      "latitude": {
+        "type": "number",
+        "title": "Location Latitude",
+        "required": true,
+        "placeholder": "Latitude used to determine sunrise and sunset",
+        "description": "Your pool Latitude."
+      }
+      ,
+      "longitude": {
+        "type": "number",
+        "title": "Location Longitude",
+        "required": true,
+        "placeholder": "Longitude used to determine sunrise and sunset",
+        "description": "Your pool Longitude."
       }
     }
   }
