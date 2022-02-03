@@ -10,7 +10,7 @@ import { ChannelAccessory } from './accesories/channelAccessory';
 import { HeaterDevice } from './devices/heaterDevice';
 import { HeaterAccessory } from './accesories/heaterAccessory';
 import { FavouriteDevice } from './devices/favouriteDevice';
-import { FavouriteAccessory } from './accesories/favouriteAccessory';
+// import { FavouriteAccessory } from './accesories/favouriteAccessory';
 import { LightingZoneDevice } from './devices/lightingZoneDevice';
 import { LightingAccessory } from './accesories/lightingAccessory';
 import { Accessory } from './accesories/accessory';
