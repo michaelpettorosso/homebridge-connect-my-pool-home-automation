@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Homebridge Connect My Pool via Home Automation",
   "name": "homebridge-connect-my-pool-home-automation",
   "version": "1.0.0",
