@@ -109,7 +109,7 @@ export class FavouriteAccessory extends Accessory {
       return;
     }
     this.stateOn = value;
-    this.platform.setPoolAction(PoolAction.SetActiveFavourite, this.device.deviceTypeNumber, '').then((res) => {
+    this.platform.setPoolAction(PoolAction.SetActiveFavourite, value ? this.device.deviceTypeNumber : FAVOURITE_DEFAULT, '').then((res) => {
       this.log.debug('setOnState Result', res);
     });
   }
