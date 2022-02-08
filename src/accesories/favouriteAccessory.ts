@@ -4,7 +4,7 @@ import { FavouriteConfig } from '../config';
 import { IFavouriteConfigStatus } from '../configStatus';
 import { FavouriteDevice } from '../devices/favouriteDevice';
 import { ConnectMyPoolHomeAutomationHomebridgePlatform } from '../platform';
-import { FAVOURITE_DEFAULT } from '../settings';
+import { FAVOURITE_ALL_AUTO, FAVOURITE_ALL_OFF, FAVOURITE_DEFAULT } from '../settings';
 import { FavouriteStatus, KeyValuePair, PoolStatus } from '../status';
 import { Accessory } from './accessory';
 
@@ -16,7 +16,6 @@ import { Accessory } from './accessory';
 export class FavouriteAccessory extends Accessory {
 
   private stateOn = false;
-  private stateName: string;
   private favouriteConfigStatus : IFavouriteConfigStatus;
 
   private readonly favouritesModes: KeyValuePair[] = [];
@@ -27,11 +26,10 @@ export class FavouriteAccessory extends Accessory {
     status: PoolStatus,
   ) {
     super(platform, accessory, device, status);
-    this.stateName = this.deviceName;
     this.favouriteConfigStatus = this.getFavouritesConfigStatus(status);
 
-    this.favouritesModes.push({ key: 128, value: 'All Off'});
-    this.favouritesModes.push({ key: 129, value: 'All Auto'});
+    this.favouritesModes.push({ key: FAVOURITE_ALL_OFF, value: 'All Off'});
+    this.favouritesModes.push({ key: FAVOURITE_ALL_AUTO, value: 'All Auto'});
     this.favouritesModes.push({ key: FAVOURITE_DEFAULT, value: 'Default'});
   }
 
@@ -43,9 +41,9 @@ export class FavouriteAccessory extends Accessory {
   }
 
   protected createFavouriteServices(): Service {
-    this.log.debug('Creating %s service for controller', this.device.deviceName);
+    this.log.debug('Creating %s service for controller', this.deviceName);
     const zoneService = this.accessory.getServiceById(this.service.Switch, this.device.deviceType)
-                        || this.accessory.addService(this.service.Switch, this.device.deviceName, this.device.deviceType);
+                        || this.accessory.addService(this.service.Switch, this.deviceName, this.device.deviceType);
     zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
       .onSet(this.setOnState.bind(this));
@@ -97,7 +95,7 @@ export class FavouriteAccessory extends Accessory {
   /// /////////////////////
   getOnState(): boolean {
     const favouriteConfigStatus = this.favouriteConfigStatus;
-    const value = favouriteConfigStatus.active_favourite === favouriteConfigStatus.favourite_number ? true : false;
+    const value = favouriteConfigStatus.active_favourite === favouriteConfigStatus.favourite_number;
     this.log.debug('getOnState', value);
     this.stateOn = value;
     return this.stateOn;
@@ -109,7 +107,8 @@ export class FavouriteAccessory extends Accessory {
       return;
     }
     this.stateOn = value;
-    this.platform.setPoolAction(PoolAction.SetActiveFavourite, value ? this.device.deviceTypeNumber : FAVOURITE_DEFAULT, '').then((res) => {
+    this.platform.setPoolAction(PoolAction.SetActiveFavourite,
+      value ? this.device.deviceTypeNumber : FAVOURITE_ALL_AUTO).then((res) => {
       this.log.debug('setOnState Result', res);
     });
   }

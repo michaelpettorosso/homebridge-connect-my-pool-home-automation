@@ -63,4 +63,6 @@ export enum LightingMode {
 
 export const LIGHTING_COLOR_USER_1 = 8;
 
+export const FAVOURITE_ALL_OFF = 128;
+export const FAVOURITE_ALL_AUTO = 129;
 export const FAVOURITE_DEFAULT = 255;

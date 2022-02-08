@@ -192,7 +192,7 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
 
   public async setPoolAction(actionCode: number,
     deviceNumber: number,
-    value: string,
+    value = '',
     outputResponse = false,
     waitForExecution = true): Promise<boolean | undefined> {
 
