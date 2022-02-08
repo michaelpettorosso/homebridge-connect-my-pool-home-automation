@@ -43,6 +43,11 @@ export interface ILightingZoneStatus {
         color: number;
     }
 
+export interface IFavouriteStatus {
+    active_favourite: number;
+
+  }
+
 export interface PoolStatus {
         pool_spa_selection: number;
         heat_cool_selection: number;
@@ -53,6 +58,7 @@ export interface PoolStatus {
         channels: IChannelStatus[];
         valves: IValveStatus[];
         lighting_zones: ILightingZoneStatus[];
+        favourites: IFavouriteStatus[];
     }
 
 export class SolarSystemStatus implements ISolarSystemStatus, IConfigStatus {
@@ -135,5 +141,16 @@ export class ValveStatus implements IValveStatus, IConfigStatus {
     this.hasStatus = hasStatus;
     this.valve_number = valve_number;
     this.mode = ValveMode.OFF;
+  }
+}
+
+export class FavouriteStatus implements IFavouriteStatus, IConfigStatus {
+  public readonly configStatusName = 'FavouriteConfigStatus';
+  public readonly hasStatus: boolean;
+  public readonly active_favourite: number;
+
+  constructor(active_favourite: number, hasStatus = false) {
+    this.hasStatus = hasStatus;
+    this.active_favourite = active_favourite;
   }
 }

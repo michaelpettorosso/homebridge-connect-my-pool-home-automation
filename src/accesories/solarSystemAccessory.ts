@@ -1,4 +1,4 @@
-import { PlatformAccessory, Service, Characteristic} from 'homebridge';
+import { PlatformAccessory, Service } from 'homebridge';
 import { getSunrise, getSunset } from 'sunrise-sunset-js';
 import { PoolAction } from '../action';
 import { SolarSystemConfig } from '../config';

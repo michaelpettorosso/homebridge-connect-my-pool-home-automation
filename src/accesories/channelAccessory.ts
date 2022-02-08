@@ -46,8 +46,8 @@ export class ChannelAccessory extends Accessory {
 
   protected createChannelServices(): Service {
     this.log.debug('Creating %s service for controller', this.device.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.StatefulProgrammableSwitch, this.device.deviceType)
-                        || this.accessory.addService(this.service.StatefulProgrammableSwitch, this.getNameState, this.device.deviceType);
+    const zoneService = this.accessory.getServiceById(this.service.Switch, this.device.deviceType)
+                        || this.accessory.addService(this.service.Switch, this.getNameState, this.device.deviceType);
     zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
       .onSet(this.setOnState.bind(this));

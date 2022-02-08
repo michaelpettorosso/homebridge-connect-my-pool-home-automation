@@ -14,6 +14,6 @@ export class FavouriteDevice implements IDevice {
     this.deviceName = 'Favourite ' + name;
     this.deviceTypeNumber = config.favourite_number;
     this.data = config;
-    this.category = Categories.SENSOR;
+    this.category = Categories.SWITCH;
   }
 }

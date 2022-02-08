@@ -10,7 +10,7 @@ import { ChannelAccessory } from './accesories/channelAccessory';
 import { HeaterDevice } from './devices/heaterDevice';
 import { HeaterAccessory } from './accesories/heaterAccessory';
 import { FavouriteDevice } from './devices/favouriteDevice';
-// import { FavouriteAccessory } from './accesories/favouriteAccessory';
+import { FavouriteAccessory } from './accesories/favouriteAccessory';
 import { LightingZoneDevice } from './devices/lightingZoneDevice';
 import { LightingAccessory } from './accesories/lightingAccessory';
 import { Accessory } from './accesories/accessory';
@@ -71,9 +71,9 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
           accessory = new ChannelAccessory(this, homekitAccessory, channelDevice, poolStatus);
         } else if (device.deviceType === LightingZoneDevice.type) {
           accessory =new LightingAccessory(this, homekitAccessory, device, poolStatus);
-        } //else if (device.deviceType === FavouriteDevice.type) {
-        //   accessory =new FavouriteAccessory(this, homekitAccessory, device, poolStatus);
-        // }
+        } else if (device.deviceType === FavouriteDevice.type) {
+          accessory =new FavouriteAccessory(this, homekitAccessory, device, poolStatus);
+        }
         if (accessory) {
           this.accessories.push(accessory);
         }
@@ -152,9 +152,9 @@ export class ConnectMyPoolHomeAutomationHomebridgePlatform implements DynamicPla
             accessory = new ChannelAccessory(this, platformAccessory, device as ChannelDevice, poolStatus);
           } else if (device.deviceType === LightingZoneDevice.type) {
             accessory =new LightingAccessory(this, platformAccessory, device, poolStatus);
-          } //else if (device.deviceType === FavouriteDevice.type) {
-          //   accessory =new FavouriteAccessory(this, platformAccessory, device, poolStatus);
-          // }
+          } else if (device.deviceType === FavouriteDevice.type) {
+            accessory =new FavouriteAccessory(this, platformAccessory, device, poolStatus);
+          }
           if (accessory) {
             // the accessory does not yet exist, so we need to create it
             this.log.info('Adding new accessory:', device.deviceName);
