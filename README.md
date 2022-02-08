@@ -11,7 +11,7 @@
 
 `homebridge-connect-my-pool-home-automation` is a plugin for Homebridge intended to give you an integrated experience with your [Astral Connect My Pool](https://connectmypool.com.au) devices.
 
-It currently only provides the HomeKit thermostat and sensor information services which includes current temperature, target tempertaure, and pool pump status via contact sensors.
+It currently provides Heater, Spa, Channels and Favourite capabilty in  HomeKit. Sensor information is used to indicate status of channels (hack to indicate mode, open means not off as it is highlighted in Home).
 
 ## Installation
 

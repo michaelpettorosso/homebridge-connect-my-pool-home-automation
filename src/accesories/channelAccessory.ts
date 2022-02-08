@@ -121,7 +121,7 @@ export class ChannelAccessory extends Accessory {
   // GET AND SET FUNCTIONS
   /// /////////////////////
   getContactSensorOnState(): number {
-    const value = !this.getOnState() ?
+    const value = this.getOnState() ?
       this.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED:
       this.Characteristic.ContactSensorState.CONTACT_DETECTED;
     this.log.debug('getContactSensorOnState', value);
