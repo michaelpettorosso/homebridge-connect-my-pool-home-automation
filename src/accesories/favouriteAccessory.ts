@@ -14,7 +14,6 @@ import { Accessory } from './accessory';
  * Each accessory may expose multiple services of different service types.
  */
 export class FavouriteAccessory extends Accessory {
-
   private stateOn = false;
   private favouriteConfigStatus : IFavouriteConfigStatus;
 
@@ -41,21 +40,20 @@ export class FavouriteAccessory extends Accessory {
   }
 
   protected createFavouriteServices(): Service {
-    this.log.debug('Creating %s service for controller', this.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.Switch, this.device.deviceType)
-                        || this.accessory.addService(this.service.Switch, this.deviceName, this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.Switch, this.deviceType)
+                        || this.accessory.addService(this.service.Switch, this.deviceName, this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
       .onSet(this.setOnState.bind(this));
 
     this.services.push(zoneService);
     return zoneService;
-
   }
+
   /// /////////////////////
   // GET AND SET CONFIG STATUS
   /// /////////////////////
-
   protected getFavouritesConfigStatus(status : PoolStatus) : IFavouriteConfigStatus{
     const currentStatus = status;
     const currentDevice = this.device as FavouriteDevice;
@@ -66,7 +64,7 @@ export class FavouriteAccessory extends Accessory {
         new FavouriteStatus(currentStatus.active_favourite, true),
         currentConfig);
 
-      this.log.debug('favouriteConfigStatus', configStatus);
+      this.debugLog('favouriteConfigStatus', configStatus);
       return configStatus;
 
     } else {
@@ -74,7 +72,7 @@ export class FavouriteAccessory extends Accessory {
       Object.assign({},
         currentConfig,
         new FavouriteStatus(FAVOURITE_DEFAULT, false));
-      this.log.debug('favouriteConfigStatus', configStatus);
+      this.debugLog('favouriteConfigStatus', configStatus);
       return configStatus;
     }
   }
@@ -96,7 +94,7 @@ export class FavouriteAccessory extends Accessory {
   getOnState(): boolean {
     const favouriteConfigStatus = this.favouriteConfigStatus;
     const value = favouriteConfigStatus.active_favourite === favouriteConfigStatus.favourite_number;
-    this.log.debug('getOnState', value);
+    this.debugLog('getOnState', value);
     this.stateOn = value;
     return this.stateOn;
   }
@@ -109,7 +107,7 @@ export class FavouriteAccessory extends Accessory {
     this.stateOn = value;
     this.platform.setPoolAction(PoolAction.SetActiveFavourite,
       value ? this.device.deviceTypeNumber : FAVOURITE_ALL_AUTO).then((res) => {
-      this.log.debug('setOnState Result', res);
+      this.debugLog('setOnState Result', res);
     });
   }
 }

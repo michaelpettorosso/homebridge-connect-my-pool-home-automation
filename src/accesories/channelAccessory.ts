@@ -47,22 +47,21 @@ export class ChannelAccessory extends Accessory {
   }
 
   protected createChannelServices(): Service {
-    this.log.debug('Creating %s service for controller', this.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.Switch, this.device.deviceType)
-                        || this.accessory.addService(this.service.Switch, this.deviceName, this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.Switch, this.deviceType)
+                        || this.accessory.addService(this.service.Switch, this.deviceName, this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
       .onSet(this.setOnState.bind(this));
 
     this.services.push(zoneService);
     return zoneService;
-
   }
 
   protected createChannelSensorService(): Service {
-    this.log.debug('Creating %s sensor service for controller', this.device.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.ContactSensor, this.device.deviceType)
-                        || this.accessory.addService(this.service.ContactSensor, this.getNameState, this.device.deviceType);
+    this.log.debug('Creating %s sensor service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.ContactSensor, this.deviceType)
+                        || this.accessory.addService(this.service.ContactSensor, this.deviceName, this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.ContactSensorState)
       .onGet(this.getContactSensorOnState.bind(this));
 
@@ -71,12 +70,11 @@ export class ChannelAccessory extends Accessory {
 
     this.services.push(zoneService);
     return zoneService;
-
   }
+
   /// /////////////////////
   // GET AND SET CONFIG STATUS
   /// /////////////////////
-
   protected getChannelsConfigStatus(status : PoolStatus) : IChannelConfigStatus{
     const currentStatus = status;
     const currentDevice = this.device as ChannelDevice;
@@ -89,7 +87,7 @@ export class ChannelAccessory extends Accessory {
         new ChannelStatus(currentConfig.channel_number, true, currentConfig.function),
         currentConfig, channelStatus);
 
-      this.log.debug('channelConfigStatus', configStatus);
+      this.debugLog('channelConfigStatus', configStatus);
       return configStatus;
 
     } else {
@@ -97,7 +95,7 @@ export class ChannelAccessory extends Accessory {
       Object.assign({},
         currentConfig,
         new ChannelStatus(currentConfig.channel_number, false, currentConfig.function));
-      this.log.debug('channelConfigStatus', configStatus);
+      this.debugLog('channelConfigStatus', configStatus);
       return configStatus;
     }
   }
@@ -112,9 +110,9 @@ export class ChannelAccessory extends Accessory {
     this.services[0].getCharacteristic(this.Characteristic.On)
       .updateValue(this.getOnState());
     this.services[1].getCharacteristic(this.Characteristic.ContactSensorState)
-      .setValue(this.getContactSensorOnState());
+      .updateValue(this.getContactSensorOnState());
     this.services[1].getCharacteristic(this.Characteristic.Name)
-      .setValue(this.getNameState());
+      .updateValue(this.getNameState());
   }
 
   /// /////////////////////
@@ -124,27 +122,27 @@ export class ChannelAccessory extends Accessory {
     const value = this.getOnState() ?
       this.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED:
       this.Characteristic.ContactSensorState.CONTACT_DETECTED;
-    this.log.debug('getContactSensorOnState', value);
+    this.debugLog('getContactSensorOnState', value);
     this.stateContactOn = value;
     return this.stateContactOn;
   }
 
   getOnState(): boolean {
     const channelConfigStatus = this.channelConfigStatus;
-    const value = channelConfigStatus.mode === ChannelsMode.OFF ? false : true;
-    this.log.debug('getOnState', value);
+    const value = channelConfigStatus.mode <= ChannelsMode.AUTO ? false : true;
+    this.debugLog('getOnState', value);
     this.stateOn = value;
     return this.stateOn;
   }
 
   setOnState(value) {
-    this.log.debug('setOnState', value);
+    this.debugLog('setOnState', value);
     if (this.stateOn === value) {
       return;
     }
     this.stateOn = value;
     this.platform.setPoolAction(PoolAction.CycleChanelMode, this.device.deviceTypeNumber).then((res) => {
-      this.log.debug('setOnState Result', res);
+      this.debugLog('setOnState Result', res);
     });
   }
 
@@ -152,7 +150,7 @@ export class ChannelAccessory extends Accessory {
     const channelConfigStatus = this.channelConfigStatus;
     const value = !this.getOnState() ?
       this.deviceName : this.deviceName + '-' + this.channelsModes.find(kv => kv.key === channelConfigStatus.mode)?.value;
-    this.log.debug('getNameState', value);
+    this.debugLog('getNameState', value);
     this.stateName = value;
     return this.stateName;
   }

@@ -45,13 +45,12 @@ export class HeaterAccessory extends Accessory {
       this.createPoolSpaService();
     }
     super.updatePlatform();
-
   }
 
   protected createHeaterService(): Service {
-    this.log.debug('Creating %s service for controller', this.device.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.Thermostat, this.device.deviceType)
-                        || this.accessory.addService(this.service.Thermostat, this.device.deviceName, this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.Thermostat, this.deviceType)
+                        || this.accessory.addService(this.service.Thermostat, this.deviceName, this.deviceType);
 
     zoneService.getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .setProps({
@@ -90,9 +89,9 @@ export class HeaterAccessory extends Accessory {
   }
 
   protected createPoolSpaService(): Service {
-    this.log.debug('Creating %s service for controller', 'Pool Spa Switch');
-    const zoneService = this.accessory.getServiceById(this.service.Switch, this.device.deviceType)
-                        || this.accessory.addService(this.service.Switch, 'Spa On', this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', 'Pool Spa Switch');
+    const zoneService = this.accessory.getServiceById(this.service.Switch, this.deviceType)
+                        || this.accessory.addService(this.service.Switch, 'Spa On', this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.On)
       .onSet(this.setSpaOnState.bind(this))
       .onGet(this.getSpaOnState.bind(this));
@@ -101,9 +100,9 @@ export class HeaterAccessory extends Accessory {
   }
 
   protected createPoolTemperatureService(): Service {
-    this.log.debug('Creating %s service for controller', 'Pool Temperature');
-    const zoneService = this.accessory.getServiceById(this.service.TemperatureSensor, this.device.deviceType)
-                        || this.accessory.addService(this.service.TemperatureSensor, 'Pool Temperature', this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', 'Pool Temperature');
+    const zoneService = this.accessory.getServiceById(this.service.TemperatureSensor, this.deviceType)
+                        || this.accessory.addService(this.service.TemperatureSensor, 'Pool Temperature', this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.CurrentTemperature)
       .setProps({
         maxValue: MAX_TEMP,
@@ -119,7 +118,6 @@ export class HeaterAccessory extends Accessory {
   /// /////////////////////
   // GET AND SET CONFIG STATUS
   /// /////////////////////
-
   protected getHeaterConfigStatus(status : PoolStatus) : IHeaterConfigStatus{
     const currentStatus = status;
     const currentDevice = this.device as HeaterDevice;
@@ -144,7 +142,7 @@ export class HeaterAccessory extends Accessory {
       if (configStatus.temperature < MIN_TEMP) {
         configStatus.temperature = MIN_TEMP;
       }
-      this.log.debug('heaterConfigStatus', configStatus);
+      this.debugLog('heaterConfigStatus', configStatus);
       return configStatus;
 
     } else {
@@ -152,7 +150,7 @@ export class HeaterAccessory extends Accessory {
       Object.assign({},
         currentConfig,
         new HeaterStatus(currentConfig.heater_number));
-      this.log.debug('heaterConfigStatus', configStatus);
+      this.debugLog('heaterConfigStatus', configStatus);
       return configStatus;
     }
   }
@@ -196,12 +194,12 @@ export class HeaterAccessory extends Accessory {
     if (heaterConfigStatus.hasStatus) {
       this.stateSpaOn = heaterConfigStatus.pool_spa_selection === PoolSpaSelection.SPA;
     }
-    this.log.debug('getSpaOnState:', this.stateSpaOn);
+    this.debugLog('getSpaOnState:', this.stateSpaOn);
     return this.stateSpaOn;
   }
 
   setSpaOnState(value){
-    this.log.debug('setSpaOnState:', value, this.stateSpaOn);
+    this.debugLog('setSpaOnState:', value, this.stateSpaOn);
     if (this.stateSpaOn === value) {
       return;
     }
@@ -212,7 +210,7 @@ export class HeaterAccessory extends Accessory {
       String(value ? PoolSpaSelection.SPA: PoolSpaSelection.POOL),
       true)
       .then((res) => {
-        this.log.debug('setSpaOnState Result', res);
+        this.debugLog('setSpaOnState Result', res);
       });
   }
 
@@ -223,7 +221,7 @@ export class HeaterAccessory extends Accessory {
       this.currentTemperature = heaterConfigStatus.temperature;
     }
 
-    this.log.debug('getCurrentTemperature:', this.currentTemperature);
+    this.debugLog('getCurrentTemperature:', this.currentTemperature);
     return this.currentTemperature;
   }
 
@@ -234,18 +232,18 @@ export class HeaterAccessory extends Accessory {
         ? heaterConfigStatus.spa_set_temperature : heaterConfigStatus.set_temperature;
       this.currentTargetTemperature = value;
     }
-    this.log.debug('getTargetTemperature:', this.currentTargetTemperature);
+    this.debugLog('getTargetTemperature:', this.currentTargetTemperature);
     return this.currentTargetTemperature;
   }
 
   setTargetTemperature(value) {
-    this.log.debug('setTargetTemperature:', value, this.currentTargetTemperature);
+    this.debugLog('%s setTargetTemperature:', value, this.currentTargetTemperature);
     if (this.currentTargetTemperature === value) {
       return;
     }
     this.currentTargetTemperature = value;
     this.platform.setPoolAction(PoolAction.SetHeaterSetTemperature, this.device.deviceTypeNumber, String(value), true).then((res) => {
-      this.log.debug('setTargetTemperature Result', res);
+      this.debugLog('setTargetTemperature Result', res);
     });
   }
 
@@ -255,7 +253,7 @@ export class HeaterAccessory extends Accessory {
     if (heaterConfigStatus.hasStatus) {
       this.stateCurrentHeatingCooling = heaterConfigStatus.mode;
     }
-    this.log.debug('getCurrentHeatingCoolingState:', this.stateCurrentHeatingCooling);
+    this.debugLog('getCurrentHeatingCoolingState:', this.stateCurrentHeatingCooling);
     return this.stateCurrentHeatingCooling;
   }
 
@@ -267,18 +265,18 @@ export class HeaterAccessory extends Accessory {
         : this.Characteristic.TargetHeatingCoolingState.HEAT;
       this.stateTargetHeatingCooling = value;
     }
-    this.log.debug('getTargetHeatingCoolingState:', this.stateTargetHeatingCooling);
+    this.debugLog('getTargetHeatingCoolingState:', this.stateTargetHeatingCooling);
     return this.stateTargetHeatingCooling;
   }
 
   setTargetHeatingCoolingState(value) {
-    this.log.debug('setTargetHeatingCoolingState:', value, this.stateTargetHeatingCooling);
+    this.debugLog('setTargetHeatingCoolingState:', value, this.stateTargetHeatingCooling);
     if (this.stateTargetHeatingCooling === value) {
       return;
     }
     this.stateTargetHeatingCooling = value;
     this.platform.setPoolAction(PoolAction.SetHeaterMode, this.device.deviceTypeNumber, String(value), true).then((res) => {
-      this.log.debug('stateTargetHeatingCooling Result', res);
+      this.debugLog('stateTargetHeatingCooling Result', res);
     });
   }
 
@@ -288,8 +286,7 @@ export class HeaterAccessory extends Accessory {
       const value =this.heaterConfigStatus.pool_spa_selection === PoolSpaSelection.SPA ? 'Spa Temperature' :'Pool Temperature';
       this.statePoolTemperatureName = value;
     }
-    this.log.debug('getPoolTemperatureName:', this.statePoolTemperatureName);
+    this.debugLog('getPoolTemperatureName:', this.statePoolTemperatureName);
     return this.statePoolTemperatureName;
   }
-
 }

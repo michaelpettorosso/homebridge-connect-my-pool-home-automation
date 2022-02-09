@@ -37,7 +37,6 @@ export class SolarSystemAccessory extends Accessory {
     //looks like bug in library???
     this.sunset = getSunrise(this.platform.config.latitude, this.platform.config.longitude).valueOf();
     this.sunrise = getSunset(this.platform.config.latitude, this.platform.config.longitude).valueOf();
-
   }
 
   protected setUpServices() {
@@ -45,13 +44,12 @@ export class SolarSystemAccessory extends Accessory {
     this.createSolarSystemService();
     this.services[0].setPrimaryService(true);
     this.createPoolTemperatureService();
-    //this.createHeaterSensor();
   }
 
   protected createSolarSystemService(): Service {
-    this.log.debug('Creating %s service for controller', this.device.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.Thermostat, this.device.deviceType)
-                        || this.accessory.addService(this.service.Thermostat, this.device.deviceName, this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.Thermostat, this.deviceType)
+                        || this.accessory.addService(this.service.Thermostat, this.deviceName, this.deviceType);
 
     zoneService.getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .setProps({
@@ -90,9 +88,9 @@ export class SolarSystemAccessory extends Accessory {
   }
 
   protected createPoolTemperatureService(): Service {
-    this.log.debug('Creating %s service for controller', 'Pool Temperature');
-    const zoneService = this.accessory.getServiceById(this.service.TemperatureSensor, this.device.deviceType)
-                        || this.accessory.addService(this.service.TemperatureSensor, 'Pool Temperature', this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', 'Pool Temperature');
+    const zoneService = this.accessory.getServiceById(this.service.TemperatureSensor, this.deviceType)
+                        || this.accessory.addService(this.service.TemperatureSensor, 'Pool Temperature', this.deviceType);
     zoneService.getCharacteristic(this.Characteristic.CurrentTemperature)
       .setProps({
         maxValue: MAX_TEMP,
@@ -109,15 +107,13 @@ export class SolarSystemAccessory extends Accessory {
     const todayDate = new Date(d.setMinutes(d.getMinutes() - d.getTimezoneOffset())).valueOf();
 
     const result = (todayDate >= this.sunrise) && (todayDate <= this.sunset);
-    this.log.debug('isDayTime', result, todayDate, this.sunrise, this.sunset);
+    this.debugLog('isDayTime', result, todayDate, this.sunrise, this.sunset);
     return result;
   }
-
 
   /// /////////////////////
   // GET AND SET CONFIG STATUS
   /// /////////////////////
-
   protected getSolarSystemConfigStatus(status : PoolStatus): ISolarSystemConfigStatus {
     const currentStatus = status;
     const currentDevice = this.device as SolarSystemDevice;
@@ -137,7 +133,7 @@ export class SolarSystemAccessory extends Accessory {
       if (solarSystemConfigStatus.temperature < MIN_TEMP) {
         solarSystemConfigStatus.temperature = MIN_TEMP;
       }
-      this.log.debug('solarSystemConfigStatus', solarSystemConfigStatus);
+      this.debugLog('solarSystemConfigStatus', solarSystemConfigStatus);
       return solarSystemConfigStatus;
 
     } else {
@@ -145,7 +141,7 @@ export class SolarSystemAccessory extends Accessory {
       Object.assign({},
         currentConfig,
         new SolarSystemStatus(currentConfig.solar_number));
-      this.log.debug('solarSystemConfigStatus', solarSystemConfigStatus);
+      this.debugLog('solarSystemConfigStatus', solarSystemConfigStatus);
       return solarSystemConfigStatus;
     }
   }
@@ -173,7 +169,6 @@ export class SolarSystemAccessory extends Accessory {
 
     this.services[1].getCharacteristic(this.Characteristic.CurrentTemperature)
       .updateValue(this.getCurrentTemperature());
-
   }
 
   /// /////////////////////
@@ -185,7 +180,7 @@ export class SolarSystemAccessory extends Accessory {
     if (solarSystemConfigStatus && solarSystemConfigStatus.hasStatus) {
       this.currentTemperature = solarSystemConfigStatus.temperature;
     }
-    this.log.debug('getCurrentTemperature:', this.currentTemperature);
+    this.debugLog('getCurrentTemperature:', this.currentTemperature);
     return this.currentTemperature;
   }
 
@@ -195,12 +190,12 @@ export class SolarSystemAccessory extends Accessory {
     if (solarSystemConfigStatus && solarSystemConfigStatus.hasStatus) {
       this.currentTargetTemperature = solarSystemConfigStatus.set_temperature;
     }
-    this.log.debug('getTargetTemperature:', this.currentTargetTemperature);
+    this.debugLog('getTargetTemperature:', this.currentTargetTemperature);
     return this.currentTargetTemperature;
   }
 
   setTargetTemperature(value) {
-    this.log.debug('setTargetTemperature:', value);
+    this.debugLog('setTargetTemperature:', value);
   }
 
   getCurrentHeatingCoolingState(): number {
@@ -213,8 +208,7 @@ export class SolarSystemAccessory extends Accessory {
       this.stateCurrentHeatingCooling = value;
     }
 
-
-    this.log.debug('getCurrentHeatingCoolingState:', this.stateCurrentHeatingCooling);
+    this.debugLog('getCurrentHeatingCoolingState:', this.stateCurrentHeatingCooling);
     return this.stateCurrentHeatingCooling;
   }
 
@@ -228,19 +222,18 @@ export class SolarSystemAccessory extends Accessory {
 
       this.stateTargetHeatingCooling = value;
     }
-    this.log.debug('getTargetHeatingCoolingState', this.stateTargetHeatingCooling);
+    this.debugLog('getTargetHeatingCoolingState', this.stateTargetHeatingCooling);
     return this.stateTargetHeatingCooling;
   }
 
   setTargetHeatingCoolingState(value) {
-    this.log.debug('setTargetHeatingCoolingState:', value, this.stateTargetHeatingCooling);
+    this.debugLog('setTargetHeatingCoolingState:', value, this.stateTargetHeatingCooling);
     if (this.stateTargetHeatingCooling === value) {
       return;
     }
     this.stateTargetHeatingCooling = value;
     this.platform.setPoolAction(PoolAction.SetSolarMode, this.device.deviceTypeNumber, String(value), true).then((res) => {
-      this.log.debug('stateTargetHeatingCooling Result', res);
+      this.debugLog('stateTargetHeatingCooling Result', res);
     });
   }
-
 }

@@ -35,7 +35,6 @@ export class Accessory {
       .setCharacteristic(this.Characteristic.Model, device.deviceType)
       .setCharacteristic(this.Characteristic.SerialNumber, this.SerialNumber);
     this.setUpServices();
-
   }
 
   get device():IDevice {
@@ -50,6 +49,10 @@ export class Accessory {
     return this.device.deviceName;
   }
 
+  get deviceType() {
+    return this.device.deviceType;
+  }
+
   get homekitAccessory() {
     return this.accessory;
   }
@@ -58,8 +61,13 @@ export class Accessory {
     return '0000.0000.000' + this.device.deviceTypeNumber.toString();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected debugLog(message: string, ...parameters: any[]): void {
+    this.log.debug('[%s] %s', this.deviceName, message, ...parameters);
+  }
+
   protected setUpServices() {
-    this.log.debug('Creating %s services', this.device.deviceName);
+    this.log.debug('Creating %s services', this.deviceName);
   }
 
   protected updatePlatform() {
@@ -71,10 +79,8 @@ export class Accessory {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setConfigStatus(status: PoolStatus) {
     // to be implemented in children classes
-
   }
 
-  // eslint-disable-next-line no-unused-vars
   async updateStatus(status: PoolStatus) {
     if (status) {
       this.accessory.context.status = status;

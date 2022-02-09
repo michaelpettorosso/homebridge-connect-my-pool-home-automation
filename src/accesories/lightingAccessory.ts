@@ -35,9 +35,9 @@ export class LightingAccessory extends Accessory {
   }
 
   protected createLightingService(): Service {
-    this.log.debug('Creating %s service for controller', this.device.deviceName);
-    const zoneService = this.accessory.getServiceById(this.service.Lightbulb, this.device.deviceType)
-                        || this.accessory.addService(this.service.Lightbulb, this.device.deviceName, this.device.deviceType);
+    this.log.debug('Creating %s service for accessory', this.deviceName);
+    const zoneService = this.accessory.getServiceById(this.service.Lightbulb, this.deviceType)
+                        || this.accessory.addService(this.service.Lightbulb, this.deviceName, this.deviceType);
 
     zoneService.getCharacteristic(this.Characteristic.On)
       .onGet(this.getOnState.bind(this))
@@ -62,7 +62,7 @@ export class LightingAccessory extends Accessory {
         new LightingZoneStatus(currentConfig.lighting_zone_number, true),
         currentConfig,
         lightStatus);
-      this.log.debug('lightConfigStatus', lightConfigStatus);
+      this.debugLog('lightConfigStatus', lightConfigStatus);
       return lightConfigStatus;
 
     } else {
@@ -70,7 +70,7 @@ export class LightingAccessory extends Accessory {
       Object.assign({},
         currentConfig,
         new LightingZoneStatus(currentConfig.lighting_zone_number));
-      this.log.debug('lightConfigStatus', lightConfigStatus);
+      this.debugLog('lightConfigStatus', lightConfigStatus);
       return lightConfigStatus;
     }
   }
@@ -99,20 +99,20 @@ export class LightingAccessory extends Accessory {
   getOnState(): boolean {
     const lightingZoneConfigStatus = this.lightingZoneConfigStatus;
     const value = lightingZoneConfigStatus.mode === LightingMode.OFF ? false : true;
-    this.log.debug('getOnState', value);
+    this.debugLog('getOnState', value);
     this.stateOn = value;
     return this.stateOn;
   }
 
   setOnState(value) {
-    this.log.debug('setOnState', value);
+    this.debugLog('setOnState', value);
     if (this.stateOn === value) {
       return;
     }
     this.stateOn = value;
     this.platform.setPoolAction(PoolAction.SetLightingZoneMode, this.device.deviceTypeNumber,
       String(value === false ? LightingMode.OFF : LightingMode.ON)).then((res) => {
-      this.log.debug('setOnState Result', res);
+      this.debugLog('setOnState Result', res);
     });
   }
 }

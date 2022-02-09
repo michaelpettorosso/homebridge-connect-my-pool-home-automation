@@ -11,7 +11,7 @@
 
 `homebridge-connect-my-pool-home-automation` is a plugin for Homebridge intended to give you an integrated experience with your [Astral Connect My Pool](https://connectmypool.com.au) devices.
 
-It currently provides Heater, Spa, Channels and Favourite capabilty in  HomeKit. Sensor information is used to indicate status of channels (hack to indicate mode, open means not off as it is highlighted in Home).
+It currently provides Heater, Spa, Channels and Favourite capabilty in HomeKit. Sensor information is used to indicate status of channels (hack to indicate mode, open means not off as it is highlighted in Home).
 
 ## Installation
 
@@ -45,4 +45,4 @@ Add the platform in `config.json` in your home directory inside `.homebridge` an
 ### Notes
 
 
-Only tested with my setup, I have EVO pool pump, EVO gas heater, spa jets and spa blower and lights.
+Only tested with my setup, I have EVO pool pump, EVO gas heater, spa jets, spa blower, lights and favourites.
