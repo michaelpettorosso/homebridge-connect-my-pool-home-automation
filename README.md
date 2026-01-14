@@ -11,7 +11,43 @@
 
 `homebridge-connect-my-pool-home-automation` is a plugin for Homebridge intended to give you an integrated experience with your [Astral Connect My Pool](https://connectmypool.com.au) devices.
 
-It currently provides Heater, Spa, Channels and Favourite capabilty in HomeKit. Sensor information is used to indicate status of channels (hack to indicate mode, open means not off as it is highlighted in Home).
+It currently provides Heater, Solar, Spa, Channels and Favourite capabilty in HomeKit. Sensor information is used to indicate status of channels (hack to indicate mode, open means not off as it is highlighted in Home).
+
+
+Supports dynamic accessories:
+
+- Channel
+- Light
+- Valve
+- Heater
+- Solar
+- Favourites
+
+Features:
+
+- Shared API polling
+- Jitter + exponential backoff
+- Rate-limited SET calls
+- Persistent accessory metadata
+- Dynamic add/remove via API config
+
+
+How to build and install
+
+Install dependencies:
+
+npm install
+
+
+Build TypeScript:
+
+npm run build
+
+
+Link to Homebridge (for local development):
+
+sudo npm link
+
 
 ## Installation
 
@@ -27,22 +63,31 @@ sudo npm install -g --unsafe-perm homebridge
 sudo npm install -g --unsafe-perm homebridge-connect-my-pool-home-automation
 ```
 
+
 ## Plugin configuration
 Add the platform in `config.json` in your home directory inside `.homebridge` and edit the required fields.
 
 ```js
-"platforms": [
-  {
+  "platforms": [
+    {
     "name": "Connect My Pool Home Automation",
     "apikey": "apikey",
+    "apiBaseUrl": "http://your-api.local",
     "latitude": latitude,
     "longitude": longitude,
     "platform": "ConnectMyPoolHomeAutomation"
-  }
-]
+    "polling": {
+	"baseIntervalSeconds": 30,
+	"maxIntervalSeconds": 300,
+	"backoffMultiplier": 2,
+	"jitterRatio": 0.2
+     }
+    }
+  ]
 ```
 
 ### Notes
-
-
 Only tested with my setup, I have EVO pool pump, EVO gas heater, spa jets, spa blower, lights and favourites.
+
+
+Restart Homebridge and it will dynamically create accessories based on your API.

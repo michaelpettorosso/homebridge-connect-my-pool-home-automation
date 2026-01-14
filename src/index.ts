@@ -1,11 +1,16 @@
 import { API } from 'homebridge';
+import { ConnectMyPoolHomebridgePlatform } from './platform';
+import {
+  PLATFORM_NAME,
+} from './settings';
 
-import { PLATFORM_NAME } from './settings';
-import { ConnectMyPoolHomeAutomationHomebridgePlatform } from './platform';
 
-/**
- * This method registers the platform with Homebridge
- */
+
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, ConnectMyPoolHomeAutomationHomebridgePlatform);
+  // TS workaround: cast to any
+  (api as any).registerPlatform({
+    id: PLATFORM_NAME,
+    name: PLATFORM_NAME,
+    platform: ConnectMyPoolHomebridgePlatform
+  });
 };

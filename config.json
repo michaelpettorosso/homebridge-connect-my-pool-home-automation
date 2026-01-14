@@ -1,0 +1,10 @@
+{
+  "platform": "ApiPlatform",
+  "apiKey": "MY_API_KEY",
+  "polling": {
+    "baseIntervalMs": 30000,
+    "maxIntervalMs": 120000,
+    "backoffMultiplier": 3,
+    "jitterFraction": 0.2
+  }
+}

@@ -12,7 +12,14 @@ export const BASE_URL = 'https://www.connectmypool.com.au/api/';
 
 export const MANUFACTURER = 'Astral';
 
-export const API_INTERVAL = 60000;
+export const API_INTERVAL = 30_000;
+
+export const DEFAULT_POLLING = {
+  baseIntervalMs: API_INTERVAL,
+  maxIntervalMs: 120_000,
+  backoffMultiplier: 2,
+  jitterFraction: 0.1,
+};
 
 export enum TemperatureScale {
   CELSIUS = 0,
