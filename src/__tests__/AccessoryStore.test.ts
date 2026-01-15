@@ -15,13 +15,17 @@ describe('AccessoryStore', () => {
   let rateLimiter: RateLimiter;
 
   beforeEach(() => {
-    log = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn()
-    };
-    rateLimiter = new RateLimiter(0);
+    
+    const mockService = {
+        getCharacteristic: jest.fn().mockReturnValue({
+          onSet: jest.fn(),
+          updateValue: jest.fn(),
+        }),
+        addCharacteristic: jest.fn().mockReturnValue({
+          onSet: jest.fn(),
+        }),
+      };
+
 
     api = {
       hap: {
@@ -37,11 +41,23 @@ describe('AccessoryStore', () => {
         },
         Service: { Switch: jest.fn(), Lightbulb: jest.fn(), Thermostat: jest.fn() }
       },
-      platformAccessory: jest.fn(),
+      platformAccessory: jest.fn().mockImplementation(() => ({
+        context: {},
+        getService: jest.fn().mockReturnValue(undefined),
+        addService: jest.fn().mockReturnValue(mockService),
+      })),
+
       registerPlatformAccessories: jest.fn(),   // ✅ add this
       unregisterPlatformAccessories: jest.fn(), // ✅ add this
     } as unknown as API;
 
+    log = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn()
+    };
+    rateLimiter = new RateLimiter(0);
     store = new AccessoryStore(
                   log,
                   api,

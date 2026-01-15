@@ -10,7 +10,11 @@ describe(PLATFORM_NAME, () => {
   let api: any;
   let log: any;
 
+  global.fetch = jest.fn();
+
   beforeEach(() => {
+    jest.useFakeTimers();
+
     log = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -62,12 +66,6 @@ describe(PLATFORM_NAME, () => {
       }
     };
 
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        channels: [{ channel_number: 1, mode: 1 }]
-      })
-    }) as any;
 
     platform = new ConnectMyPoolHomebridgePlatform(
       log,
@@ -88,9 +86,22 @@ describe(PLATFORM_NAME, () => {
   });
 
   it('adds accessories from poolconfig', async () => {
-    await Promise.resolve();
-    expect(api.registerPlatformAccessories).toHaveBeenCalled();
+  (fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      channels: [
+        { id: 'channel-1', name: 'Pump', mode: 0 }
+      ]
+    }),
   });
+
+  jest.advanceTimersByTime(1000);
+
+  await Promise.resolve();
+  await Promise.resolve();
+
+  expect(api.registerPlatformAccessories).toHaveBeenCalled();
+});
 
   it('removes accessory correctly', () => {
     platform.removeAccessory('channel-1');
