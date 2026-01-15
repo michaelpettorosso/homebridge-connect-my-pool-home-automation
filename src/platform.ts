@@ -2,14 +2,12 @@ import {
   API,
   DynamicPlatformPlugin,
   Logger,
-  PlatformAccessory,
-//  Service,
-//  Characteristic
+  PlatformAccessory
 } from 'homebridge';
 import { AccessoryStore } from './AccessoryStore';
 import { PollingController } from './PollingController';
 import { RateLimiter } from './RateLimiter';
-//import { ModeCharacteristic } from './ModeCharacteristic';
+import { ModeCharacteristic } from './ModeCharacteristic';
 
 import {
   PlatformConfigExtended,
@@ -26,8 +24,6 @@ import {
 
 
 export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
-//   public readonly Service: typeof Service; 
-//   public readonly Characteristic: typeof Characteristic;  
   private readonly store: AccessoryStore;
   private readonly polling: PollingController;
   private readonly baseUrl: string;
@@ -50,9 +46,15 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
       ...config.polling,
     };
 
+    ModeCharacteristic.register(this.api);
+    // 🔹 Load accessories dynamically from ConnectMyPool
+    this.loadPoolConfig().catch(err =>
+      this.log.error('Failed to load pool configuration', err)
+    );
+
     this.log.info('Polling config:', pollingConfig);
     const rateLimiter = new RateLimiter(config.rateLimit?.minIntervalMs ?? DEFAULT_RATE_LIMIT);
-    this.store = new AccessoryStore(log, api, rateLimiter, config.apiKey!,  this.baseUrl);
+    this.store = new AccessoryStore(log, api, rateLimiter, config.apiKey!, this.baseUrl);
 
     this.polling = new PollingController(
         log,
@@ -68,11 +70,6 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
 
     this.polling.start();
 
-     // 🔹 Load accessories dynamically from ConnectMyPool
-    this.loadPoolConfig().catch(err =>
-      this.log.error('Failed to load pool configuration', err)
-    );
-
   }
 
   configureAccessory(accessory: PlatformAccessory) {
@@ -85,81 +82,81 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
    * Fetch /api/poolconfig and dynamically add accessories
    */
   private async loadPoolConfig(): Promise<void> {
-  if (!this.config.apiKey) return;
+    if (!this.config.apiKey) return;
 
-  const response = await fetch(`${this.baseUrl}/poolconfig`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pool_api_code: this.config.apiKey }),
-  });
+    const response = await fetch(`${this.baseUrl}/poolconfig`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_api_code: this.config.apiKey }),
+    });
 
-  const data = (await response.json()) as PoolConfigResponse;
+    const data = (await response.json()) as PoolConfigResponse;
+    this.log.info('Pool config:', data);
+    const discoveredIds = new Set<string>();
 
-  const discoveredIds = new Set<string>();
+    const add = (cfg: RemoteAccessoryConfig) => {
+      discoveredIds.add(cfg.id);
+      this.addAccessory(cfg);
+    };
+  
+    if (data.has_heaters)
+      data.heaters?.forEach((h: any) =>
+          add({
+              id: `heater-${h.heater_number}`,
+              name: `Pool Heater`,
+              type: 'heater',
+              mode: h.mode === 1 ? 'on' : 'off',
+          })
+      );
+    if (data.has_solar_systems)
+      data.solar_systems?.forEach((s: any) =>
+          add({
+              id: `heater-${s.solar_number}`,
+              name: `Solar Heater`,
+              type: 'solar',
+              mode: s.mode === 1 ? 'on' : 'off',
+          })
+      );
 
-  const add = (cfg: RemoteAccessoryConfig) => {
-    discoveredIds.add(cfg.id);
-    this.addAccessory(cfg);
-  };
- 
-  if (data.has_heaters)
-    data.heaters?.forEach((h: any) =>
-        add({
-            id: `heater-${h.heater_number}`,
-            name: `Pool Heater`,
-            type: 'heater',
-            mode: h.mode === 1 ? 'on' : 'off',
-        })
-    );
-  if (data.has_solar_systems)
-    data.solar_systems?.forEach((s: any) =>
-        add({
-            id: `heater-${s.solar_number}`,
-            name: `Solar Heater`,
-            type: 'solar',
-            mode: s.mode === 1 ? 'on' : 'off',
-        })
-    );
+    if (data.has_lighting_zones)
+      data.lighting_zones?.forEach((z: any) =>
+          add({
+          id: `light-${z.lighting_zone_number}`,
+          name: z.name,
+          type: 'light',
+          mode: z.mode === 1 ? 'on' : 'off',
+          })
+      );
 
-  if (data.has_lighting_zones)
-    data.lighting_zones?.forEach((z: any) =>
-        add({
-        id: `light-${z.lighting_zone_number}`,
-        name: `Pool Light ${z.lighting_zone_number}`,
-        type: 'light',
-        mode: z.mode === 1 ? 'on' : 'off',
-        })
-    );
+    if (data.has_channels)
+      data.channels?.forEach((c: any) =>
+          add({
+          id: `channel-${c.channel_number}`,
+          name: c.name,
+          type: 'channel',
+          mode: c.mode === 1 ? 'on' : 'off',
+          })
+      );
 
-  if (data.has_channels)
-    data.channels?.forEach((c: any) =>
-        add({
-        id: `channel-${c.channel_number}`,
-        name: `Channel ${c.channel_number}`,
-        type: 'channel',
-        mode: c.mode === 1 ? 'on' : 'off',
-        })
-    );
+    if (data.has_valves)
+      data.valves?.forEach((v: any) =>
+          add({
+          id: `valve-${v.valve_number}`,
+          name: v.name,
+          type: 'valve',
+          mode: v.mode === 1 ? 'on' : 'off',
+          })
+      );
 
-  if (data.has_valves)
-    data.valves?.forEach((v: any) =>
-        add({
-        id: `valve-${v.valve_number}`,
-        name: `Valve ${v.valve_number}`,
-        type: 'valve',
-        mode: v.mode === 1 ? 'on' : 'off',
-        })
-    );
+    // 🔥 Remove stale accessories
+    this.store.getAllIds().forEach(id => {
+      if (!discoveredIds.has(id)) {
+        this.removeAccessory(id);
+      }
+    });
 
-  // 🔥 Remove stale accessories
-  this.store.getAllIds().forEach(id => {
-    if (!discoveredIds.has(id)) {
-      this.removeAccessory(id);
-    }
-  });
-
-  this.log.info('Accessory reconciliation complete');
-}
+    this.log.info('Accessory reconciliation complete');
+  }
 
   addAccessory(config: RemoteAccessoryConfig) {
     this.store.add(config);
@@ -175,64 +172,64 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private async pollPoolStatus(): Promise<void> {
-  if (!this.config.apiKey) {
-    return;
+    if (!this.config.apiKey) {
+      return;
+    }
+
+    const response = await fetch(`${this.baseUrl}/poolstatus`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_api_code: this.config.apiKey }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`poolstatus failed: ${response.status}`);
+    }
+
+    const status = (await response.json()) as PoolStatusResponse;
+
+    // Lighting zones
+    status.lighting_zones?.forEach(zone => {
+      this.store.setState(
+        `light-${zone.lighting_zone_number}`,
+        zone.mode === 1 ? 'on' : 'off'
+      );
+    });
+
+    // Channels
+    status.channels?.forEach(ch => {
+      this.store.setState(
+        `channel-${ch.channel_number}`,
+        ch.mode === 1 ? 'on' : 'off'
+      );
+    });
+
+    // Solar Heaters
+    status.solar_systems?.forEach(s => {
+      this.store.setState(
+        `solar-${s.solar_number}`,
+        s.mode === 1 ? 'on' : 'off'
+      );
+    });
+
+    // Heaters
+    status.heaters?.forEach(h => {
+      this.store.setState(
+        `heater-${h.heater_number}`,
+        h.mode === 1 ? 'on' : 'off'
+      );
+    });
+
+    // Valves
+    status.valves?.forEach(v => {
+      this.store.setState(
+        `valve-${v.valve_number}`,
+        v.mode === 1 ? 'on' : 'off'
+      );
+    });
+
+    this.log.debug('Pool status updated');
   }
-
-  const response = await fetch(`${this.baseUrl}/poolstatus`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pool_api_code: this.config.apiKey }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`poolstatus failed: ${response.status}`);
-  }
-
-  const status = (await response.json()) as PoolStatusResponse;
-
-  // Lighting zones
-  status.lighting_zones?.forEach(zone => {
-    this.store.setState(
-      `light-${zone.lighting_zone_number}`,
-      zone.mode === 1 ? 'on' : 'off'
-    );
-  });
-
-  // Channels
-  status.channels?.forEach(ch => {
-    this.store.setState(
-      `channel-${ch.channel_number}`,
-      ch.mode === 1 ? 'on' : 'off'
-    );
-  });
-
-  // Solar Heaters
-  status.solar_systems?.forEach(s => {
-    this.store.setState(
-      `solar-${s.solar_number}`,
-      s.mode === 1 ? 'on' : 'off'
-    );
-  });
-
-  // Heaters
-  status.heaters?.forEach(h => {
-    this.store.setState(
-      `heater-${h.heater_number}`,
-      h.mode === 1 ? 'on' : 'off'
-    );
-  });
-
-  // Valves
-  status.valves?.forEach(v => {
-    this.store.setState(
-      `valve-${v.valve_number}`,
-      v.mode === 1 ? 'on' : 'off'
-    );
-  });
-
-  this.log.debug('Pool status updated');
-}
 
 }
 

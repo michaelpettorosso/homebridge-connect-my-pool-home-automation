@@ -1,3 +1,4 @@
+import { API } from 'homebridge'
 import {
   Mode,
 } from './types';
@@ -15,6 +16,40 @@ import {
  * Maps Mode to numeric value used in HomeKit characteristics.
  */
 export class ModeCharacteristic {
+
+  // Stable custom UUID (must never change once published)
+  static readonly UUID = '000000E1-0000-1000-8000-135D67EC4377';
+
+  static register(api: API) {
+    const Characteristic = api.hap.Characteristic as any;
+
+    // Prevent double-registration
+    if (Characteristic.Mode) {
+      return;
+    }
+
+    class Mode extends Characteristic {
+      constructor() {
+        super('Mode', ModeCharacteristic.UUID, {
+          format: Characteristic.Formats.UINT8,
+          perms: [
+            Characteristic.Perms.READ,
+            Characteristic.Perms.WRITE,
+            Characteristic.Perms.NOTIFY,
+          ],
+          minValue: 0,
+          maxValue: 2,
+          validValues: [0, 1, 2],
+        });
+
+        this.value = this.getDefaultValue();
+      }
+    }
+
+    // Attach to Characteristic namespace
+    Characteristic.Mode = Mode;
+
+  }
   /**
    * Converts AccessoryMode to numeric HAP value
    * Off = 0, On = 1, Auto = 2
@@ -38,22 +73,5 @@ export class ModeCharacteristic {
       case 2: return 'auto';
       default: return 'off';
     }
-  }
-
-  /**
-   * Helper to create a custom characteristic at runtime
-   * Requires api.hap.Characteristic
-   */
-  static createCharacteristic(apiHap: any, name = 'Mode') {
-    const { Characteristic } = apiHap;
-
-    return new Characteristic(name)
-      .setProps({
-        format: Characteristic.Formats.UINT8,
-        perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY],
-        maxValue: 2,
-        minValue: 0,
-        validValues: [0, 1, 2]
-      });
   }
 }

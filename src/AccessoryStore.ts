@@ -28,9 +28,9 @@ export class AccessoryStore {
     const uuid = this.api.hap.uuid.generate(
       `connectmypool:${config.type}:${config.id}`
     );
+    this.log.info('add:', config);
 
     let accessory = this.accessories.get(config.id);
-
     if (!accessory) {
       accessory = new this.api.platformAccessory(config.name, uuid);
 
@@ -50,6 +50,7 @@ export class AccessoryStore {
       );
 
       this.setupServices(accessory, config);
+
       this.log.info(`Registered ${config.type} ${config.name}`);
     }
 
@@ -74,7 +75,6 @@ export class AccessoryStore {
     return [...this.accessories.keys()];
   }
 
-
   getAccessory(id: string) {
     return this.accessories.get(id);
   }
@@ -83,7 +83,7 @@ export class AccessoryStore {
     this.states.set(id, mode);
   }
 
-  getState(id: string) {
+  getState(id: string): Mode | undefined {
     return this.states.get(id);
   }
 
@@ -138,80 +138,68 @@ export class AccessoryStore {
   }
 
   private setupServices(accessory: PlatformAccessory, config: RemoteAccessoryConfig) {
-    const { Service, Characteristic } = this.api.hap;
+    const { Service } = this.api.hap;
 
     if (config.type === 'channel' || config.type === 'valve') {
       const service =
         accessory.getService(Service.Switch) ??
-        accessory.addService(Service.Switch);
-
-      const { Characteristic } = this.api.hap;
-
-      const ModeChar = (Characteristic as any).Mode;
-
-      service.getCharacteristic(Characteristic.On)
-        .onSet(async value => {
-          const mode = value ? 'on' : 'off';
-          this.setState(config.id, mode);
-          await this.setRemoteState({ ...config, mode });
-        });
-
-      service.addCharacteristic(ModeChar)
-        .onSet(async value => {
-          const mode =
-            value === 0 ? 'off' :
-            value === 1 ? 'on' : 'auto';
-
-          this.setState(config.id, mode);
-          await this.setRemoteState({ ...config, mode });
-        });
-
-    }
-
-    if (config.type === 'light') {
-      const service =
-        accessory.getService(Service.Lightbulb) ??
-        accessory.addService(Service.Lightbulb);
-
-      service.getCharacteristic(Characteristic.On)
-        .onSet(async value => {
-          const mode = value ? 'on' : 'off';
-          this.setState(config.id, mode);
-          await this.setRemoteState({ ...config, mode });
-        });
-    }
-
-    if (config.type === 'heater') {
-  const service = accessory.getService(Service.Thermostat)!;
-
-  service
-    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-    .setProps({
-      validValues: [
-        Characteristic.TargetHeatingCoolingState.OFF,
-        Characteristic.TargetHeatingCoolingState.HEAT,
-        Characteristic.TargetHeatingCoolingState.AUTO
-      ]
-    })
-    .onGet(() => {
-      return this.states.get(accessory.context.remoteId) ?? 0;
-    })
-    .onSet(async value => {
-        const mode = value ? 'on' : 'off';
+        accessory.addService(Service.Switch, config.name);
+  
+      const modeChar = (this.api.hap.Characteristic as any).Mode;
+      this.log.info('setupServices', modeChar);
+      service.getCharacteristic(modeChar)
+      .onGet(() => ModeCharacteristic.toValue(this.getState(config.id) ?? 'off'))
+      .onSet(async (value) => {
+        const mode = ModeCharacteristic.fromValue(value as number);
         this.setState(config.id, mode);
         await this.setRemoteState({ ...config, mode });
-    }
-    );
-
-    service
-      .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-      .onGet(() => {
-        return this.states.get(accessory.context.remoteId) ?? 0;
       });
+    }
 
-  return;
-}
+    // if (config.type === 'light') {
+    //   const service =
+    //     accessory.getService(Service.Lightbulb) ??
+    //     accessory.addService(Service.Lightbulb);
 
+    //   service.getCharacteristic(Characteristic.On)
+    //     .onSet(async value => {
+    //       const mode = value ? 'on' : 'off';
+    //       this.setState(config.id, mode);
+    //       await this.setRemoteState({ ...config, mode });
+    //     });
+    // }
+
+    // if (config.type === 'heater') {
+    //   const service = accessory.getService(Service.Thermostat)!;
+
+    //   service
+    //     .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+    //     .setProps({
+    //       validValues: [
+    //         Characteristic.TargetHeatingCoolingState.OFF,
+    //         Characteristic.TargetHeatingCoolingState.HEAT,
+    //         Characteristic.TargetHeatingCoolingState.AUTO
+    //       ]
+    //     })
+    //     .onGet(() => {
+    //       return this.states.get(accessory.context.remoteId) ?? 0;
+    //     })
+    //     .onSet(async value => {
+    //         const mode = value ? 'on' : 'off';
+    //         this.setState(config.id, mode);
+    //         await this.setRemoteState({ ...config, mode });
+    //     }
+    //     );
+
+    //     service
+    //       .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+    //       .onGet(() => {
+    //         return this.states.get(accessory.context.remoteId) ?? 0;
+    //       });
+
+    // }
+    this.log.info('setupServices');
+    return;
   }
 
 }

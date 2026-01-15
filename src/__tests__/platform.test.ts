@@ -16,11 +16,31 @@ describe(PLATFORM_NAME, () => {
     jest.useFakeTimers();
 
     log = {
-      info: jest.fn(),
+      info: console.info,
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn()
     };
+
+    const setProps = jest.fn();
+
+    const MockModeCharacteristic = class {
+      static Formats = { UINT8: 'uint8' };
+      static Perms = {
+        READ: 'pr',
+        WRITE: 'pw',
+        NOTIFY: 'pn',
+      };
+
+      setProps = setProps;
+      value: any;
+
+      constructor(public displayName: string, public uuid: string) {}
+      getDefaultValue() {
+        return 0;
+      }
+    };
+
 
     api = {
       hap: {
@@ -28,22 +48,15 @@ describe(PLATFORM_NAME, () => {
           generate: jest.fn((s: string) => `uuid-${s}`)
         },
         Service: {
-          Switch: class {},
+          Switch: jest.fn(() => ({
+          setCharacteristic: jest.fn(),
+          getCharacteristic: MockModeCharacteristic,
+          updateCharacteristic: jest.fn()
+        })),
           Lightbulb: class {},
           Thermostat: class {}
         },
-        Characteristic: {
-          On: 'On',
-          CurrentHeatingCoolingState: {
-            OFF: 0,
-            HEAT: 1
-          },
-          TargetHeatingCoolingState: {
-            HEAT: 1
-          },
-          TargetTemperature: 'TargetTemperature',
-          CurrentTemperature: 'CurrentTemperature'
-        }
+        Characteristic: MockModeCharacteristic
       },
       platformAccessory: jest.fn((name: string, uuid: string) => ({
         displayName: name,
@@ -89,13 +102,14 @@ describe(PLATFORM_NAME, () => {
   (fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     json: async () => ({
+      has_channels: true,
       channels: [
-        { id: 'channel-1', name: 'Pump', mode: 0 }
+        { channel_number: '1', name: 'Pump', mode: 0 }
       ]
     }),
   });
 
-  jest.advanceTimersByTime(1000);
+  //jest.advanceTimersByTime(1000);
 
   await Promise.resolve();
   await Promise.resolve();
@@ -103,8 +117,22 @@ describe(PLATFORM_NAME, () => {
   expect(api.registerPlatformAccessories).toHaveBeenCalled();
 });
 
-  it('removes accessory correctly', () => {
-    platform.removeAccessory('channel-1');
-    expect(api.unregisterPlatformAccessories).toHaveBeenCalled();
+it('removes accessory correctly', async () => {
+  (fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      has_channels: true,
+      channels: [
+        { channel_number: '1', name: 'Pump', mode: 0 },
+      ],
+    }),
   });
+
+  await Promise.resolve();
+  await Promise.resolve();
+
+  platform.removeAccessory('channel-1');
+
+  expect(api.unregisterPlatformAccessories).toHaveBeenCalled();
+});
 });
