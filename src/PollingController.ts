@@ -19,7 +19,7 @@ export class PollingController {
     private readonly baseIntervalMs: number,
     private readonly maxIntervalMs: number,
     private readonly backoffMultiplier: number,
-    private readonly jitterFraction: number,
+    private readonly jitterPercent: number,
     private readonly pollFn: () => Promise<void>,
     persistDir?: string
   ) {
@@ -70,7 +70,7 @@ export class PollingController {
 
   private scheduleNext() {
     const jitter = this.jitterEnabled
-      ? this.intervalMs * this.jitterFraction * Math.random()
+      ? this.intervalMs * (this.jitterPercent / 100) * Math.random()
       : 0;
 
     this.timer = setTimeout(async () => {

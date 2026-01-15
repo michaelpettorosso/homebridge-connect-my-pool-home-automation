@@ -15,11 +15,13 @@ export const MANUFACTURER = 'Astral';
 export const API_INTERVAL = 30_000;
 
 export const DEFAULT_POLLING = {
-  baseIntervalMs: API_INTERVAL,
+  intervalMs: API_INTERVAL,
   maxIntervalMs: 120_000,
   backoffMultiplier: 2,
-  jitterFraction: 0.1,
+  jitterPercent: 2,
 };
+
+export const DEFAULT_RATE_LIMIT = 1_000
 
 export enum TemperatureScale {
   CELSIUS = 0,

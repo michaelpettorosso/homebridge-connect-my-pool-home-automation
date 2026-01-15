@@ -3,13 +3,13 @@ import {
   DynamicPlatformPlugin,
   Logger,
   PlatformAccessory,
-  Service,
-  Characteristic
+//  Service,
+//  Characteristic
 } from 'homebridge';
 import { AccessoryStore } from './AccessoryStore';
 import { PollingController } from './PollingController';
 import { RateLimiter } from './RateLimiter';
-import { ModeCharacteristic } from './ModeCharacteristic';
+//import { ModeCharacteristic } from './ModeCharacteristic';
 
 import {
   PlatformConfigExtended,
@@ -21,6 +21,7 @@ import {
 import {
   BASE_URL,
   DEFAULT_POLLING,
+  DEFAULT_RATE_LIMIT
 } from './settings';
 
 
@@ -50,15 +51,15 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
     };
 
     this.log.info('Polling config:', pollingConfig);
-    const rateLimiter = new RateLimiter(1000);
+    const rateLimiter = new RateLimiter(config.rateLimit?.minIntervalMs ?? DEFAULT_RATE_LIMIT);
     this.store = new AccessoryStore(log, api, rateLimiter, config.apiKey!,  this.baseUrl);
 
     this.polling = new PollingController(
         log,
-        pollingConfig.baseIntervalMs,
+        pollingConfig.intervalMs,
         pollingConfig.maxIntervalMs,
         pollingConfig.backoffMultiplier,
-        pollingConfig.jitterFraction,
+        pollingConfig.jitterPercent,
         async () => {
             await this.pollPoolStatus();
         },

@@ -4,35 +4,122 @@
   "singular": true,
   "schema": {
     "type": "object",
+    "required": ["platform", "apiKey"],
     "properties": {
-      "name": {
-        "title": "Name",
+      "platform": {
+        "required": true,
         "type": "string",
-        "required": true,
-        "default": "Connect My Pool Home Automation"
+        "const": "ConnectMyPoolHomeAutomation",
+        "description": "Platform identifier for Connect My Pool"
       },
-      "apikey": {
+
+      "apiKey": {
+        "required": true,
         "type": "string",
-        "title": "APIKEY",
-        "required": true,
-        "placeholder": "APIKey used to access Home Automation",
-        "description": "Your Connect My Pool APIKey."
+        "title": "API Key",
+        "description": "Your Connect My Pool API key (pool_api_code)",
+        "minLength": 13
       },
-      "latitude": {
-        "type": "number",
-        "title": "Location Latitude",
-        "required": true,
-        "placeholder": "Latitude used to determine sunrise and sunset",
-        "description": "Your pool Latitude."
-      }
-      ,
-      "longitude": {
-        "type": "number",
-        "title": "Location Longitude",
-        "required": true,
-        "placeholder": "Longitude used to determine sunrise and sunset",
-        "description": "Your pool Longitude."
+
+      "baseUrl": {
+        "type": "string",
+        "title": "API Base URL",
+        "default": "https://www.connectmypool.com.au/api",
+        "description": "Override only if instructed by Connect My Pool support"
+      },
+      "location": {
+        "type": "object",
+        "title": "Location Settings to determine sunrise and sunset (for solar)",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "title": "Location Latitude",
+            "required": true,
+            "placeholder": "Latitude used to determine sunrise and sunset",
+            "description": "Your pool Latitude."
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Location Longitude",
+            "required": true,
+            "placeholder": "Longitude used to determine sunrise and sunset",
+            "description": "Your pool Longitude."
+          }
+      }},
+      "polling": {
+        "type": "object",
+        "title": "Polling Settings",
+        "properties": {
+          "intervalMs": {
+            "type": "integer",
+            "title": "Polling Interval (milliseconds)",
+            "default": 30000,
+            "minimum": 30000,
+            "maximum": 120000,
+            "description": "How often pool status is polled"
+          },
+
+          "backoffMultiplier": {
+            "type": "integer",
+            "title": "Backoff Multiplier",
+            "default": 2,
+            "minimum": 2,
+            "maximum": 10
+          },
+
+          "jitterPercent": {
+            "type": "integer",
+            "title": "Jitter Percentage",
+            "default": 20,
+            "minimum": 0,
+            "maximum": 50,
+            "description": "Random jitter added to polling interval after errors"
+          }
+        }
+      },
+
+      "rateLimit": {
+        "type": "object",
+        "title": "API Rate Limiting",
+        "properties": {
+          "minIntervalMs": {
+            "type": "integer",
+            "title": "Minimum SET Interval (ms)",
+            "default": 1000,
+            "minimum": 250,
+            "maximum": 10000,
+            "description": "Minimum delay between /api/poolaction calls"
+          }
+        }
+      },
+
+      "debug": {
+        "type": "boolean",
+        "title": "Enable Debug Logging",
+        "default": false
       }
     }
-  }
+  },
+
+  "layout": [
+    "apiKey",
+    "baseUrl",
+    {
+      "type": "fieldset",
+      "title": "Polling",
+      "items": [
+        "polling.intervalMs",
+        "polling.backoffMultiplier",
+        "polling.jitterPercent"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Rate Limiting",
+      "items": [
+        "rateLimit.minIntervalMs"
+      ]
+    },
+    "debug"
+  ]
 }
