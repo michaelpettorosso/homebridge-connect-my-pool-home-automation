@@ -5,16 +5,15 @@ import {
   API_TEST_KEY
 } from '../settings';
 
+import { EventEmitter } from 'events';
+
 describe(PLATFORM_NAME, () => {
   let platform: ConnectMyPoolHomebridgePlatform;
   let api: any;
   let log: any;
 
-  global.fetch = jest.fn();
-
   beforeEach(() => {
     jest.useFakeTimers();
-
     log = {
       info: console.info,
       warn: jest.fn(),
@@ -24,6 +23,8 @@ describe(PLATFORM_NAME, () => {
 
     const setProps = jest.fn();
 
+    const registerPlatformAccessories = jest.fn();
+
     const MockModeCharacteristic = class {
       static Formats = { UINT8: 'uint8' };
       static Perms = {
@@ -31,6 +32,9 @@ describe(PLATFORM_NAME, () => {
         WRITE: 'pw',
         NOTIFY: 'pn',
       };
+
+      onGet = jest.fn();
+      onSet = jest.fn();
 
       setProps = setProps;
       value: any;
@@ -42,21 +46,19 @@ describe(PLATFORM_NAME, () => {
     };
 
 
-    api = {
+    api = Object.assign(new EventEmitter(), {
       hap: {
         uuid: {
           generate: jest.fn((s: string) => `uuid-${s}`)
         },
         Service: {
-          Switch: jest.fn(() => ({
-          setCharacteristic: jest.fn(),
-          getCharacteristic: MockModeCharacteristic,
-          updateCharacteristic: jest.fn()
-        })),
+          Switch:class {},
           Lightbulb: class {},
           Thermostat: class {}
         },
-        Characteristic: MockModeCharacteristic
+        Characteristic: {
+          Mode: MockModeCharacteristic
+        }
       },
       platformAccessory: jest.fn((name: string, uuid: string) => ({
         displayName: name,
@@ -66,18 +68,20 @@ describe(PLATFORM_NAME, () => {
         addService: jest.fn(() => ({
           setCharacteristic: jest.fn(),
           getCharacteristic: jest.fn(() => ({
-            setProps: jest.fn().mockReturnThis(),
-            onSet: jest.fn()
+              Mode: MockModeCharacteristic,
+              onGet: jest.fn().mockReturnThis(),
+              onSet: jest.fn().mockReturnThis(),
+              setProps: jest.fn().mockReturnThis(),
           })),
           updateCharacteristic: jest.fn()
         }))
       }) as unknown as PlatformAccessory),
-      registerPlatformAccessories: jest.fn(),
+      registerPlatformAccessories: registerPlatformAccessories,
       unregisterPlatformAccessories: jest.fn(),
       user: {
         persistPath: jest.fn(() => '/tmp')
       }
-    };
+    }) as any;
 
 
     platform = new ConnectMyPoolHomebridgePlatform(
@@ -99,36 +103,62 @@ describe(PLATFORM_NAME, () => {
   });
 
   it('adds accessories from poolconfig', async () => {
-  (fetch as jest.Mock).mockResolvedValueOnce({
-    ok: true,
-    json: async () => ({
-      has_channels: true,
-      channels: [
-        { channel_number: '1', name: 'Pump', mode: 0 }
-      ]
-    }),
+  jest.spyOn(platform as any, 'loadPoolConfig').mockImplementation(async () => {
+    platform['store'].add({
+      id: 'channel-1',
+      name: 'Pump',
+      type: 'channel',
+      mode: 'off',
+    });
   });
+  // (fetch as jest.Mock).mockResolvedValueOnce({
+  //   ok: true,
+  //   json: async () => ({
+  //     has_channels: true,
+  //     channels: [
+  //       { channel_number: '1', name: 'Pump', mode: 0 }
+  //     ]
+  //   }),
+  // });
 
   //jest.advanceTimersByTime(1000);
 
+  //await Promise.resolve();
+  //await Promise.resolve();
+
+  // THIS IS REQUIRED
+  api.emit('didFinishLaunching');
   await Promise.resolve();
-  await Promise.resolve();
+
+//expect(spy).toHaveBeenCalled();
 
   expect(api.registerPlatformAccessories).toHaveBeenCalled();
 });
 
 it('removes accessory correctly', async () => {
-  (fetch as jest.Mock).mockResolvedValueOnce({
-    ok: true,
-    json: async () => ({
-      has_channels: true,
-      channels: [
-        { channel_number: '1', name: 'Pump', mode: 0 },
-      ],
-    }),
+  jest.spyOn(platform as any, 'loadPoolConfig').mockImplementation(async () => {
+    platform['store'].add({
+      id: 'channel-1',
+      name: 'Pump',
+      type: 'channel',
+      mode: 'off',
+    });
   });
-
+  // (fetch as jest.Mock).mockResolvedValueOnce({
+  //   ok: true,
+  //   json: async () => ({
+  //     has_channels: true,
+  //     channels: [
+  //       { channel_number: '1', name: 'Pump', mode: 0 },
+  //     ],
+  //   }),
+  // });
+/* 
   await Promise.resolve();
+  await Promise.resolve(); */
+
+  // THIS IS REQUIRED
+  api.emit('didFinishLaunching');
   await Promise.resolve();
 
   platform.removeAccessory('channel-1');

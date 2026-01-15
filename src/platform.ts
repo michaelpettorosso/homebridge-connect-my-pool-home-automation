@@ -47,12 +47,8 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
     };
 
     ModeCharacteristic.register(this.api);
-    // 🔹 Load accessories dynamically from ConnectMyPool
-    this.loadPoolConfig().catch(err =>
-      this.log.error('Failed to load pool configuration', err)
-    );
 
-    this.log.info('Polling config:', pollingConfig);
+    this.log.debug('Polling config:', pollingConfig);
     const rateLimiter = new RateLimiter(config.rateLimit?.minIntervalMs ?? DEFAULT_RATE_LIMIT);
     this.store = new AccessoryStore(log, api, rateLimiter, config.apiKey!, this.baseUrl);
 
@@ -69,6 +65,13 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
         );
 
     this.polling.start();
+
+    this.api.on('didFinishLaunching', async () => {
+      // 🔹 Load accessories dynamically from ConnectMyPool
+      await this.loadPoolConfig().catch(err =>
+        this.log.error('Failed to load pool configuration', err)
+      );
+    });
 
   }
 

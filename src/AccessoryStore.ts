@@ -28,8 +28,7 @@ export class AccessoryStore {
     const uuid = this.api.hap.uuid.generate(
       `connectmypool:${config.type}:${config.id}`
     );
-    this.log.info('add:', config);
-
+    
     let accessory = this.accessories.get(config.id);
     if (!accessory) {
       accessory = new this.api.platformAccessory(config.name, uuid);
@@ -48,7 +47,6 @@ export class AccessoryStore {
         PLATFORM_NAME,
         [accessory]
       );
-
       this.setupServices(accessory, config);
 
       this.log.info(`Registered ${config.type} ${config.name}`);
@@ -61,6 +59,10 @@ export class AccessoryStore {
     const accessory = this.accessories.get(id);
     if (!accessory) return;
 
+    if (typeof this.api.unregisterPlatformAccessories !== 'function') {
+      this.log.warn('unregisterPlatformAccessories not available');
+      return;
+    }
     this.api.unregisterPlatformAccessories(
       PLUGIN_NAME,
       PLATFORM_NAME,
@@ -146,7 +148,6 @@ export class AccessoryStore {
         accessory.addService(Service.Switch, config.name);
   
       const modeChar = (this.api.hap.Characteristic as any).Mode;
-      this.log.info('setupServices', modeChar);
       service.getCharacteristic(modeChar)
       .onGet(() => ModeCharacteristic.toValue(this.getState(config.id) ?? 'off'))
       .onSet(async (value) => {
@@ -198,7 +199,7 @@ export class AccessoryStore {
     //       });
 
     // }
-    this.log.info('setupServices');
+
     return;
   }
 
