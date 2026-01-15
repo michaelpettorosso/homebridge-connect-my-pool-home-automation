@@ -1,6 +1,11 @@
 import { AccessoryStore } from '../AccessoryStore';
 import { RateLimiter } from '../RateLimiter';
 import { RemoteAccessoryConfig } from '../types';
+import {
+  BASE_URL,
+  API_TEST_KEY
+} from '../settings';
+
 import { API } from 'homebridge';
 
 describe('AccessoryStore', () => {
@@ -37,14 +42,21 @@ describe('AccessoryStore', () => {
       unregisterPlatformAccessories: jest.fn(), // ✅ add this
     } as unknown as API;
 
-    store = new AccessoryStore(log, api, rateLimiter);
+    store = new AccessoryStore(
+                  log,
+                  api,
+                  rateLimiter,
+                  API_TEST_KEY,
+                  BASE_URL
+                );
+
   });
 
   it('adds an accessory and reads state', () => {
-    const config: RemoteAccessoryConfig = { id: '1', name: 'Switch', type: 'switch', mode: 'off' };
+    const config: RemoteAccessoryConfig = { id: '1', name: 'Switch', type: 'light', mode: 'off' };
     store.add(config);
     expect(store.getState('1')).toBe('off');
-    expect(api.hap.uuid.generate).toHaveBeenCalledWith('connectmypool:switch:1');
+    expect(api.hap.uuid.generate).toHaveBeenCalledWith('connectmypool:light:1');
 
   });
 });

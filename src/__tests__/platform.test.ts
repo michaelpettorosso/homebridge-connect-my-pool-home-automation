@@ -1,8 +1,12 @@
-import { ApiPlatform } from '../platform';
+import { ConnectMyPoolHomebridgePlatform } from '../platform';
 import { PlatformAccessory } from 'homebridge';
+import {
+  PLATFORM_NAME,
+  API_TEST_KEY
+} from '../settings';
 
-describe('ApiPlatform', () => {
-  let platform: ApiPlatform;
+describe(PLATFORM_NAME, () => {
+  let platform: ConnectMyPoolHomebridgePlatform;
   let api: any;
   let log: any;
 
@@ -65,13 +69,13 @@ describe('ApiPlatform', () => {
       })
     }) as any;
 
-    platform = new ApiPlatform(
+    platform = new ConnectMyPoolHomebridgePlatform(
       log,
       {
-        platform: 'ApiPlatform',
-        apiKey: 'test-key',
+        platform: PLATFORM_NAME,
+        apiKey: API_TEST_KEY,
         polling: {
-          baseIntervalMs: 1000
+          intervalMs: 1000
         }
       } as any,
       api

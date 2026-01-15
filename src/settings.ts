@@ -14,6 +14,8 @@ export const MANUFACTURER = 'Astral';
 
 export const API_INTERVAL = 30_000;
 
+export const API_TEST_KEY = 'API_Test_Key';
+
 export const DEFAULT_POLLING = {
   intervalMs: API_INTERVAL,
   maxIntervalMs: 120_000,

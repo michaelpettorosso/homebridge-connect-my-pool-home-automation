@@ -2,6 +2,10 @@ import { API, Logger, PlatformAccessory } from 'homebridge';
 import { RemoteAccessoryConfig, Mode } from './types';
 import { RateLimiter } from './RateLimiter';
 import { ModeCharacteristic } from './ModeCharacteristic';
+import {
+  PLATFORM_NAME,
+  PLUGIN_NAME,
+} from './settings';
 
 export class AccessoryStore {
   private accessories = new Map<string, PlatformAccessory>();
@@ -40,8 +44,8 @@ export class AccessoryStore {
       this.states.set(config.id, config.mode);
 
       this.api.registerPlatformAccessories(
-        'homebridge-dynamic-accessories-plugin',
-        'ApiPlatform',
+        PLUGIN_NAME,
+        PLATFORM_NAME,
         [accessory]
       );
 
@@ -57,8 +61,8 @@ export class AccessoryStore {
     if (!accessory) return;
 
     this.api.unregisterPlatformAccessories(
-      'homebridge-dynamic-accessories-plugin',
-      'ApiPlatform',
+      PLUGIN_NAME,
+      PLATFORM_NAME,
       [accessory]
     );
 
@@ -79,6 +83,10 @@ export class AccessoryStore {
     this.states.set(id, mode);
   }
 
+  getState(id: string) {
+    return this.states.get(id);
+  }
+
   async setRemoteState(config: RemoteAccessoryConfig) {
     await this.rateLimiter.schedule(async () => {
       const [type, numberStr] = config.id.split('-');
@@ -96,7 +104,7 @@ export class AccessoryStore {
           deviceType = 'heater';
           break;
         case 'solar_system':
-          deviceType = 'solar';
+          deviceType = 'solar_system';
           break;  
         case 'valve':
           deviceType = 'valve';
@@ -142,14 +150,14 @@ export class AccessoryStore {
       const ModeChar = (Characteristic as any).Mode;
 
       service.getCharacteristic(Characteristic.On)
-        .onSet(async (value: boolean) => {
+        .onSet(async value => {
           const mode = value ? 'on' : 'off';
           this.setState(config.id, mode);
           await this.setRemoteState({ ...config, mode });
         });
 
       service.addCharacteristic(ModeChar)
-        .onSet(async (value: number) => {
+        .onSet(async value => {
           const mode =
             value === 0 ? 'off' :
             value === 1 ? 'on' : 'auto';
@@ -166,7 +174,7 @@ export class AccessoryStore {
         accessory.addService(Service.Lightbulb);
 
       service.getCharacteristic(Characteristic.On)
-        .onSet(async (value: boolean) => {
+        .onSet(async value => {
           const mode = value ? 'on' : 'off';
           this.setState(config.id, mode);
           await this.setRemoteState({ ...config, mode });
@@ -186,23 +194,24 @@ export class AccessoryStore {
       ]
     })
     .onGet(() => {
-      return this.state.get(accessory.context.remoteId) ?? 0;
+      return this.states.get(accessory.context.remoteId) ?? 0;
     })
-    .onSet(value =>
-      this.rateLimitedThermostatSet(
-        accessory.context.remoteId,
-        value as number
-      )
+    .onSet(async value => {
+        const mode = value ? 'on' : 'off';
+        this.setState(config.id, mode);
+        await this.setRemoteState({ ...config, mode });
+    }
     );
 
-  service
-    .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-    .onGet(() => {
-      return this.state.get(accessory.context.remoteId) ?? 0;
-    });
+    service
+      .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+      .onGet(() => {
+        return this.states.get(accessory.context.remoteId) ?? 0;
+      });
 
   return;
 }
 
   }
+
 }

@@ -19,10 +19,10 @@ let log: any;
 
     controller = new PollingController(
       log,
-      100, // base interval
+      100, // interval
       1000, // max interval
       2, // backoff multiplier
-      0.1, // jitter
+      20, // jitter
       callback
     );
     jest.useFakeTimers();
