@@ -1,11 +1,12 @@
-import { ConnectMyPoolHomebridgePlatform } from '../platform';
+import { ConnectMyPoolHomebridgePlatform } from '../src/platform';
 import { PlatformAccessory } from 'homebridge';
 import {
   PLATFORM_NAME,
   API_TEST_KEY
-} from '../settings';
+} from '../src/settings';
 
 import { EventEmitter } from 'events';
+import { AccessoryType, ChannelAccessoryConfig, LightAccessoryConfig } from '../src/types/accessory';
 
 describe(PLATFORM_NAME, () => {
   let platform: ConnectMyPoolHomebridgePlatform;
@@ -103,29 +104,19 @@ describe(PLATFORM_NAME, () => {
   });
 
   it('adds accessories from poolconfig', async () => {
-  jest.spyOn(platform as any, 'loadPoolConfig').mockImplementation(async () => {
-    platform['store'].add({
+    const channelConfig = {
       id: 'channel-1',
       name: 'Pump',
       type: 'channel',
-      mode: 'off',
-    });
+    } as ChannelAccessoryConfig;
+  jest.spyOn(platform as any, 'loadPoolConfig').mockImplementation(async () => {
+    platform['store'].add(channelConfig);
+    platform['store'].add({
+      id: 'light-1',
+      name: 'Light',
+      type: AccessoryType.Light,
+    } as LightAccessoryConfig)
   });
-  // (fetch as jest.Mock).mockResolvedValueOnce({
-  //   ok: true,
-  //   json: async () => ({
-  //     has_channels: true,
-  //     channels: [
-  //       { channel_number: '1', name: 'Pump', mode: 0 }
-  //     ]
-  //   }),
-  // });
-
-  //jest.advanceTimersByTime(1000);
-
-  //await Promise.resolve();
-  //await Promise.resolve();
-
   // THIS IS REQUIRED
   api.emit('didFinishLaunching');
   await Promise.resolve();
@@ -140,22 +131,9 @@ it('removes accessory correctly', async () => {
     platform['store'].add({
       id: 'channel-1',
       name: 'Pump',
-      type: 'channel',
-      mode: 'off',
+      type: 'channel'} as ChannelAccessoryConfig)
     });
-  });
-  // (fetch as jest.Mock).mockResolvedValueOnce({
-  //   ok: true,
-  //   json: async () => ({
-  //     has_channels: true,
-  //     channels: [
-  //       { channel_number: '1', name: 'Pump', mode: 0 },
-  //     ],
-  //   }),
-  // });
-/* 
-  await Promise.resolve();
-  await Promise.resolve(); */
+  
 
   // THIS IS REQUIRED
   api.emit('didFinishLaunching');

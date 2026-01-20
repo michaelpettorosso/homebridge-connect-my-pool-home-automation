@@ -14,5 +14,5 @@
     "forceConsistentCasingInFileNames": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*.ts", "src/__tests__/**/*.ts"]
+  "include": ["src/**/*.ts"],
 }

@@ -10,18 +10,25 @@ import { RateLimiter } from './RateLimiter';
 import { ModeCharacteristic } from './ModeCharacteristic';
 
 import {
-  PlatformConfigExtended,
-  RemoteAccessoryConfig,
   PoolConfigResponse,
-  PoolStatusResponse
-} from './types';
+  PoolStatusResponse,
+} from './types/api';
+
+import {
+  PlatformConfigExtended,
+} from './types/config';
+
+import {
+  AccessoryConfig,
+  AccessoryStatus,
+  AccessoryType
+} from './types/accessory';
 
 import {
   BASE_URL,
   DEFAULT_POLLING,
   DEFAULT_RATE_LIMIT
 } from './settings';
-
 
 export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
   private readonly store: AccessoryStore;
@@ -97,28 +104,22 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.info('Pool config:', data);
     const discoveredIds = new Set<string>();
 
-    const add = (cfg: RemoteAccessoryConfig) => {
+    const add = (cfg: AccessoryConfig) => {
       discoveredIds.add(cfg.id);
       this.addAccessory(cfg);
     };
   
     if (data.has_heaters)
       data.heaters?.forEach((h: any) =>
-          add({
-              id: `heater-${h.heater_number}`,
-              name: `Pool Heater`,
-              type: 'heater',
-              mode: h.mode === 1 ? 'on' : 'off',
-          })
-      );
-    if (data.has_solar_systems)
-      data.solar_systems?.forEach((s: any) =>
-          add({
-              id: `heater-${s.solar_number}`,
-              name: `Solar Heater`,
-              type: 'solar',
-              mode: s.mode === 1 ? 'on' : 'off',
-          })
+         add({ 
+            id: `heater-${h.heater_number}`,
+            type:  AccessoryType.Heater,
+            name: `Pool Heater`,
+            poolSpaSelectionEnabled: data.pool_spa_selection_enabled,
+            heatCoolSelectionEnabled: data.heat_cool_selection_enabled,
+            solarId: data.solar_systems?.[0].solar_number ?? 0,
+            solarConfig: this.config.solarConfig
+         })
       );
 
     if (data.has_lighting_zones)
@@ -126,8 +127,9 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
           add({
           id: `light-${z.lighting_zone_number}`,
           name: z.name,
-          type: 'light',
-          mode: z.mode === 1 ? 'on' : 'off',
+          type: AccessoryType.Light,
+          color_enabled: z.color_enabled,
+          colors_available: z.colors_available
           })
       );
 
@@ -136,8 +138,8 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
           add({
           id: `channel-${c.channel_number}`,
           name: c.name,
-          type: 'channel',
-          mode: c.mode === 1 ? 'on' : 'off',
+          type: AccessoryType.Channel,
+          function: c.function
           })
       );
 
@@ -146,8 +148,7 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
           add({
           id: `valve-${v.valve_number}`,
           name: v.name,
-          type: 'valve',
-          mode: v.mode === 1 ? 'on' : 'off',
+          type: AccessoryType.Valve
           })
       );
 
@@ -161,17 +162,12 @@ export class ConnectMyPoolHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.info('Accessory reconciliation complete');
   }
 
-  addAccessory(config: RemoteAccessoryConfig) {
+  addAccessory(config: AccessoryConfig) {
     this.store.add(config);
   }
 
   removeAccessory(id: string) {
     this.store.remove(id);
-  }
-
-  async setAccessoryState(config: RemoteAccessoryConfig) {
-    this.store.setState(config.id, config.mode);
-    await this.store.setRemoteState(config);
   }
 
   private async pollPoolStatus(): Promise<void> {

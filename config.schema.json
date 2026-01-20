@@ -27,24 +27,16 @@
         "default": "https://www.connectmypool.com.au/api",
         "description": "Override only if instructed by Connect My Pool support"
       },
-      "location": {
-        "type": "object",
-        "title": "Location Settings to determine sunrise and sunset (for solar)",
-        "properties": {
-          "latitude": {
-            "type": "number",
-            "title": "Location Latitude",
-            "required": true,
-            "placeholder": "Latitude used to determine sunrise and sunset",
-            "description": "Your pool Latitude."
-          },
-          "longitude": {
-            "type": "number",
-            "title": "Location Longitude",
-            "required": true,
-            "placeholder": "Longitude used to determine sunrise and sunset",
-            "description": "Your pool Longitude."
-          }
+      "solar": {
+      "type": "object",
+      "title": "Solar Heating Settings",
+      "properties": {
+        "lat": { "title": "Latitude", "type": "number" },
+        "lon": { "title": "Longitude", "type": "number" },
+        "startMonth": { "title": "Start Month (0=Jan)", "type": "number" },
+        "endMonth": { "title": "End Month (0=Jan)", "type": "number" },
+        "cloudLimit": { "title": "Cloud Limit (%)", "type": "number" },
+        "weatherApiKey": { "title": "OpenWeather API Key", "type": "string" }
       }},
       "polling": {
         "type": "object",

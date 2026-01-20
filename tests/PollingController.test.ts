@@ -1,4 +1,4 @@
-import { PollingController } from '../PollingController';
+import { PollingController } from '../src/PollingController';
 
 jest.useFakeTimers();
 

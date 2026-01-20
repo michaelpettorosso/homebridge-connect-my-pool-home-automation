@@ -1,7 +1,4 @@
 import { API } from 'homebridge'
-import {
-  Mode,
-} from './types';
 /**
  * ModeCharacteristic.ts
  * 
@@ -11,6 +8,7 @@ import {
  * Use `api.hap.Characteristic` at runtime for actual Homebridge characteristics.
  */
 
+export type Mode = 'off' | 'on' | 'auto'; //no auto for thermostat
 
 /**
  * Maps Mode to numeric value used in HomeKit characteristics.
